@@ -45,7 +45,7 @@ pub fn (mut v Vee) buffer(id int) &Buffer {
 	mut bid := id
 	if v.buffers.len == 0 {
 		// Add default buffer
-		b := &Buffer{}
+		b := new_buffer()
 		v.add_buffer(b)
 		bid = 0
 		return b

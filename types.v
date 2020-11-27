@@ -6,24 +6,18 @@ type InputType = byte | rune | string
 
 fn (ipt InputType) len() int {
 	match ipt {
-		byte {
-			return 1
-		}
-		rune {
+		byte, rune {
 			return 1
 		}
 		string {
-			return it.len
+			return ipt.len
 		}
 	}
 }
 
 fn (ipt InputType) str() string {
 	match ipt {
-		byte {
-			return ipt.str()
-		}
-		rune {
+		byte, rune {
 			return ipt.str()
 		}
 		string {
