@@ -279,14 +279,22 @@ fn (mut b Buffer) sync_cursor() {
 	if x < 0 {
 		b.cursor.pos.x = 0
 	}
-	if x > line.len - 1 {
-		b.cursor.pos.x = line.len - 1
+	if x >= line.len {
+		if line.len <= 0 {
+			b.cursor.pos.x = 0
+		} else {
+			b.cursor.pos.x = line.len - 1
+		}
 	}
 	if b.cursor.pos.y < 0 {
 		b.cursor.pos.y = 0
 	}
-	if b.cursor.pos.y > b.lines.len - 1 {
-		b.cursor.pos.y = b.lines.len - 1
+	if b.cursor.pos.y >= b.lines.len {
+		if b.lines.len <= 0 {
+			b.cursor.pos.y = 0
+		} else {
+			b.cursor.pos.y = b.lines.len - 1
+		}
 	}
 }
 
@@ -434,24 +442,15 @@ pub fn (m Magnet) str() string {
 pub fn (mut m Magnet) activate() {
 	if m.x == 0 || isnil(m.buffer) { return }
 	mut b := m.buffer
+	x, _ := m.buffer.cursor.xy()
 	line := b.cur_line()
 
-/*
-	/*
-	if b.cursor.pos.x < m.x {
-
-	}*/
-	if m.x > line.len - 1 {
-		b.cursor.pos.x = line.len-1
+	if line.len == 0 {
+		b.cursor.pos.x = 0
 	} else {
-		if b.cursor.pos.x < m.x {
-			b.cursor.pos.x = m.x
-		}
-		if m.x < line.len - 1 {
-			b.cursor.pos.x = m.x
-		}
+		b.cursor.pos.x = m.x
 	}
-*/
+	b.sync_cursor()
 }
 
 // record will record the placement of the cursor
