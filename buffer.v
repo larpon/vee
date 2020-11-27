@@ -43,12 +43,14 @@ pub fn (b Buffer) raw() string {
 	return b.lines.join(b.line_break)
 }
 
-pub fn (b Buffer) view(from int, to int) View {
+pub fn (mut b Buffer) view(from int, to int) View {
+	//pos := b.cursor.pos
 
-	//b.cursor.pos.x = b.magnet.x
+	b.magnet.activate()
+
 	slice := b.cur_slice()
-	mut tabs := 0//slice.count('\t')
-	mut vx := 0 //slice_tabs * b.tab_width
+	mut tabs := 0
+	mut vx := 0
 	for i := 0; i < slice.len; i++ {
 		if slice[i] == `\t` {
 			vx += b.tab_width
@@ -57,26 +59,13 @@ pub fn (b Buffer) view(from int, to int) View {
 		}
 		vx++
 	}
-	//l := b.cur_line()
-	mut x := vx //0 //b.cursor.pos.x
+	x := vx
 
-	/*if slice_tabs > 0 {
-		mx := b.magnet.x
-		mvx := b.magnet.vx
-		if mx != mvx {
-			x = mvx
-			if x >= l.len {
-				x = l.len
-			} else {
-				x = slice.len
-			}
-		}
-	} else {
+	/*if tabs > 0 && x > b.magnet.x {
 		x = b.magnet.x
-		if x > l.len {
-			x = l.len
-		}
+		b.cursor.pos.x = x
 	}*/
+
 	mut lines := []string{}
 	for i, line in b.lines {
 		if i >= from && i <= to {
@@ -95,6 +84,17 @@ pub fn (b Buffer) view(from int, to int) View {
 	}
 }
 
+pub fn (b Buffer) eol() bool {
+	x, y := b.cursor.xy()
+	line := b.line(y)
+	return x >= line.len
+}
+
+pub fn (b Buffer) eof() bool {
+	_, y := b.cursor.xy()
+	return y >= b.lines.len-1
+}
+
 pub fn (b Buffer) cur_char() string {
 	x, y := b.cursor.xy()
 	line := b.line(y)
@@ -107,7 +107,7 @@ pub fn (b Buffer) cur_char() string {
 pub fn (b Buffer) cur_slice() string {
 	x, y := b.cursor.xy()
 	line := b.line(y)
-	if x == 0 || x >= line.len {
+	if x == 0 || x > line.len {
 		return ''
 	}
 	return line[..x]
@@ -269,27 +269,28 @@ fn (mut b Buffer) free() {
 // set_cursor will set the cursor within the buffer bounds
 pub fn (mut b Buffer) set_cursor(x int, y int) {
 	b.cursor.set(x, y)
+	b.sync_cursor()
 	b.magnet.record()
 }
 
 // sync_cursor will sync the cursor position to be within the buffer bounds
 fn (mut b Buffer) sync_cursor() {
 	x, y := b.cursor.xy()
-	line := b.cur_line()
 	if x < 0 {
 		b.cursor.pos.x = 0
 	}
+	if y < 0 {
+		b.cursor.pos.y = 0
+	}
+	line := b.cur_line()
 	if x >= line.len {
 		if line.len <= 0 {
 			b.cursor.pos.x = 0
 		} else {
-			b.cursor.pos.x = line.len - 1
+			b.cursor.pos.x = line.len
 		}
 	}
-	if b.cursor.pos.y < 0 {
-		b.cursor.pos.y = 0
-	}
-	if b.cursor.pos.y >= b.lines.len {
+	if y > b.lines.len {
 		if b.lines.len <= 0 {
 			b.cursor.pos.y = 0
 		} else {
@@ -305,53 +306,51 @@ pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 		.up {
 			if pos.y - amount >= 0 {
 				b.cursor.move(0, -amount)
-				// Check the move
-				line := b.cur_line()
-				if b.cursor.pos.x > line.len {
-					b.cursor.set(line.len, b.cursor.pos.y)
-				}
+				b.sync_cursor()
 				//b.magnet.activate()
 			}
 		}
 		.down {
 			if pos.y + amount < b.lines.len {
 				b.cursor.move(0, amount)
-				// Check the move
-				line := b.cur_line()
-				if b.cursor.pos.x > line.len {
-					b.cursor.set(line.len, b.cursor.pos.y)
-				}
+				b.sync_cursor()
 				//b.magnet.activate()
 			}
 		}
 		.left {
 			if pos.x - amount >= 0 {
 				b.cursor.move(-amount,0)
+				b.sync_cursor()
 				b.magnet.record()
 			}
 		}
 		.right {
 			if pos.x + amount <= b.cur_line().len {
 				b.cursor.move(amount,0)
+				b.sync_cursor()
 				b.magnet.record()
 			}
 		}
 		.page_up {
 			dlines := imin(b.cursor.pos.y, amount)
 			b.cursor.move(0,-dlines)
+			b.sync_cursor()
 			//b.magnet.activate()
 		}
 		.page_down {
 			dlines := imin(b.lines.len-1, b.cursor.pos.y + amount) - b.cursor.pos.y
 			b.cursor.move(0,dlines)
+			b.sync_cursor()
 			//b.magnet.activate()
 		}
 		.home {
 			b.cursor.set(0,b.cursor.pos.y)
+			b.sync_cursor()
 			b.magnet.record()
 		}
 		.end {
 			b.cursor.set(b.cur_line().len, b.cursor.pos.y)
+			b.sync_cursor()
 			b.magnet.record()
 		}
 	}
@@ -438,18 +437,19 @@ pub fn (m Magnet) str() string {
 	return s
 }
 
+
 // activate will adjust the cursor to as close valuses as the magnet as possible
 pub fn (mut m Magnet) activate() {
 	if m.x == 0 || isnil(m.buffer) { return }
 	mut b := m.buffer
-	x, _ := m.buffer.cursor.xy()
-	line := b.cur_line()
+	//x, _ := m.buffer.cursor.xy()
+	//line := b.cur_line()
 
-	if line.len == 0 {
-		b.cursor.pos.x = 0
-	} else {
-		b.cursor.pos.x = m.x
-	}
+	//if line.len == 0 {
+	//	b.cursor.pos.x = 0
+	//} else {
+	b.cursor.pos.x = m.x
+	//}
 	b.sync_cursor()
 }
 
