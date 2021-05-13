@@ -4,11 +4,12 @@ module vee
 
 import vee.undo
 
+[heap]
 struct Vee {
 mut:
 	buffers       []&Buffer
-	active_buffer int
-	history       undo.History
+	active_buffer_index int
+	command_history undo.History
 }
 
 pub struct VeeConfig {
@@ -30,100 +31,137 @@ pub fn (mut v Vee) free() {
 	}
 }
 
-/*
-pub fn (mut v Vee) put(ipt InputType) {
-	v.put_buf(ipt, v.active_buffer)
+pub fn (mut v Vee) new_buffer() int {
+	b := new_buffer()
+	return v.add_buffer(b)
 }
 
-pub fn (mut v Vee) put_buf(ipt InputType, id int) {
-	//v.snapshots << v.snapshot()
-	mut b := v.buffer(id)
-	b.put(ipt)
-}*/
-
-pub fn (mut v Vee) buffer(id int) &Buffer {
-	mut bid := id
+pub fn (mut v Vee) buffer_at(id int) &Buffer {
+	mut buf_idx := id
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' get buffer $id/${v.buffers.len}')
+	}
 	if v.buffers.len == 0 {
 		// Add default buffer
-		b := new_buffer()
-		v.add_buffer(b)
-		bid = 0
-		return b
-	}
-	if bid >= v.buffers.len || bid < 0 {
-		bid = v.active_buffer
-	}
-	return v.buffers[bid]
-
-}
-
-pub fn (mut v Vee) active() &Buffer {
-	return v.buffer(v.active_buffer)
-}
-
-pub fn (v Vee) dump() {
-	for buffer in v.buffers {
-		buffer.dump()
-	}
-}
-
-pub fn (mut v Vee) add_buffer(b &Buffer) {
-	v.buffers << b
-	// TODO signal_buffer_added(b)
-}
-/*
-pub fn (mut v Vee) del(amount int) string {
-	return v.del_buf(amount, v.active_buffer)
-}
-
-pub fn (mut v Vee) del_buf(amount int, id int) string {
-	mut b := v.buffer(id)
-	return b.del(amount)
-}*/
-
-pub fn (mut v Vee) undo() {
-	/*
-	snapshot := v.snapshots.pop()
-	//println(snapshot)
-	//prev := json.raw_decode(snapshot) or { panic(err) }
-	prev := json.decode<Vee>(snapshot)
-	v.buffers = prev.buffers*/
-}
-
-/*
-fn (v Vee) snapshot() string {
-	//item := []undo.Item{}
-	//v.undo.push()
-	//vs := { v | active_buffer: 0 }
-	return json.encode<Vee>(v)
-}
-
-pub fn (mut v Vee) from_json(f json.Any) {
-	obj := f.as_map()
-	for k, val in obj {
-		match k {
-			'buffers' {
-				//println(val)
-				//ba := val.arr()
-				//for ab in ba {
-				//	println(ab)
-				//}
-				//v.buffers = val.arr().map(
-				//	json.decode<Buffer>(json.raw_decode(it.str())?.as_map())
-				//)
-			}
-			else {}
+		buf_idx = v.new_buffer()
+		$if debug {
+			eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' added initial buffer')
 		}
 	}
+	if buf_idx < 0 || buf_idx >= v.buffers.len {
+		$if debug {
+			eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' invalid index "$buf_idx". Returning active')
+		}
+		// TODO also check that the active index can be reached
+		buf_idx = v.active_buffer_index
+	}
+	return v.buffers[buf_idx]
+
 }
 
-pub fn (v Vee) to_json() string {
-	mut obj := map[string]json.Any
-	mut buffers := []json.Any{}
-	for buffer in v.buffers {
-		buffers << json.encode<Buffer>(buffer)
-	}
-    obj['buffers'] = buffers
-    return obj.str()
+pub fn (mut v Vee) active_buffer() &Buffer {
+	return v.buffer_at(v.active_buffer_index)
 }
-*/
+
+pub fn (v Vee) dmp() {
+	for buffer in v.buffers {
+		buffer.dmp()
+	}
+}
+
+pub fn (mut v Vee) add_buffer(b &Buffer) int {
+	v.buffers << b
+	// TODO signal_buffer_added(b)
+	return v.buffers.len-1 // buffers.len-1, i.e. the index serves as the id
+}
+
+/*
+ * Undo/redo -able buffer commands
+ */
+pub fn (mut v Vee) put(input InputType) {
+	v.buf_put(v.active_buffer_index, input)
+}
+
+pub fn (mut v Vee) buf_put(buffer_id int, input InputType) {
+	mut cmd := PutCmd{
+		vee: v
+		buffer_id: buffer_id
+		input: input
+	}
+	println(voidptr(&v))
+	println(voidptr(v))
+	cmd.do()
+	v.command_history.push(cmd)
+}
+
+pub fn (mut v Vee) del(amount int) string {
+	return v.buf_del(v.active_buffer_index, amount)
+}
+
+pub fn (mut v Vee) buf_del(buffer_id int, amount int) string {
+	mut b := v.buffer_at(buffer_id)
+	return b.del(amount)
+}
+
+/*
+ * Commands
+ */
+struct PutCmd {
+mut:
+	vee &Vee
+	buffer_id int
+	pos Position
+	input InputType
+}
+fn (cmd PutCmd) str() string {
+	return 'PutCmd {
+	vee: ${ptr_str(cmd.vee)}
+	buffer_id: $cmd.buffer_id
+	pod: $cmd.pos
+	input: $cmd.input
+}'
+}
+
+fn (mut cmd PutCmd) do() {
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'\n$cmd $cmd.buffer_id')
+	}
+	mut b := cmd.vee.buffer_at(cmd.buffer_id)
+	b.put(cmd.input)
+	cmd.pos = b.cursor.pos
+}
+
+fn (mut cmd PutCmd) undo() {
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'\n$cmd $cmd.buffer_id')
+	}
+	mut b := cmd.vee.buffer_at(cmd.buffer_id)
+	b.move_cursor_to(cmd.pos.x, cmd.pos.y)
+	b.del(-cmd.input.len())
+}
+
+//
+pub fn (mut v Vee) undo() bool {
+	if v.command_history.len > 0 {
+		$if debug {
+			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		}
+		cmd := v.command_history.pop() or { return false }
+		cmd.undo()
+		return true
+	}
+	return false
+}
+
+pub fn (mut v Vee) redo() bool {
+	if v.command_history.len > 0 {
+		$if debug {
+			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		}
+		//v.command_history.push(cmd)
+		//TODO v.command_history.pop().redo()
+		return true
+	}
+	return false
+}
+

@@ -251,17 +251,17 @@ pub fn (mut b Buffer) del(amount int) string {
 	return removed
 }
 
-fn (b Buffer) dump() {
+fn (b Buffer) dmp() {
 	eprintln('$b.cursor.pos\n${b.raw()}')
 }
 
 // free will free all buffer memory
 fn (mut b Buffer) free() {
 	$if debug { eprintln(@MOD+'.'+@STRUCT+'::'+@FN) }
-	for line in b.lines {
-		line.free()
-	}
 	unsafe {
+		for line in b.lines {
+			line.free()
+		}
 		b.lines.free()
 	}
 }
@@ -354,6 +354,11 @@ pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 			b.magnet.record()
 		}
 	}
+}
+
+pub fn (mut b Buffer) move_cursor_to(x int, y int) {
+	b.cursor.set(x, y)
+	b.sync_cursor()
 }
 
 pub fn (mut b Buffer) move_to_word(movement Movement) {

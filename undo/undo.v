@@ -2,22 +2,33 @@
 // Use of this source code is governed by the MIT license distributed with this software.
 module undo
 
-import x.json2 as json
+//import x.json2 as json
 
 //type Item = json.Any
 
+interface IHistoryCommand {
+	do()
+	undo()
+}
+
+
 struct History {
+pub mut:
+	len int
 mut:
-	items []json.Any
+	items []IHistoryCommand
 }
 
-fn (mut h History) push(object json.Any) {
+pub fn (mut h History) push(object IHistoryCommand) {
 	h.items << object
+	h.len = h.items.len
 }
 
-fn (mut h History) pop() ?json.Any {
+pub fn (mut h History) pop() ?IHistoryCommand {
 	if h.items.len > 0 {
-		return h.items.pop()
+		item := h.items.pop()
+		h.len = h.items.len
+		return item
 	}
 	return none
 }
