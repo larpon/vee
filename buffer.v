@@ -266,8 +266,8 @@ fn (mut b Buffer) free() {
 	}
 }
 
-// set_cursor will set the cursor within the buffer bounds
-pub fn (mut b Buffer) set_cursor(x int, y int) {
+// cursor_to will set the cursor within the buffer bounds
+pub fn (mut b Buffer) cursor_to(x int, y int) {
 	b.cursor.set(x, y)
 	b.sync_cursor()
 	b.magnet.record()
@@ -354,11 +354,6 @@ pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 			b.magnet.record()
 		}
 	}
-}
-
-pub fn (mut b Buffer) move_cursor_to(x int, y int) {
-	b.cursor.set(x, y)
-	b.sync_cursor()
 }
 
 pub fn (mut b Buffer) move_to_word(movement Movement) {

@@ -8,8 +8,8 @@ import vee.undo
 struct Vee {
 mut:
 	buffers       []&Buffer
-	active_buffer_index int
-	command_history undo.History
+	active_buffer_id int
+	invoker undo.Invoker
 }
 
 pub struct VeeConfig {
@@ -53,14 +53,13 @@ pub fn (mut v Vee) buffer_at(id int) &Buffer {
 			eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' invalid index "$buf_idx". Returning active')
 		}
 		// TODO also check that the active index can be reached
-		buf_idx = v.active_buffer_index
+		buf_idx = v.active_buffer_id
 	}
 	return v.buffers[buf_idx]
-
 }
 
 pub fn (mut v Vee) active_buffer() &Buffer {
-	return v.buffer_at(v.active_buffer_index)
+	return v.buffer_at(v.active_buffer_id)
 }
 
 pub fn (v Vee) dmp() {
@@ -76,92 +75,157 @@ pub fn (mut v Vee) add_buffer(b &Buffer) int {
 }
 
 /*
- * Undo/redo -able buffer commands
+ * Cursor movement
  */
-pub fn (mut v Vee) put(input InputType) {
-	v.buf_put(v.active_buffer_index, input)
+pub fn (mut v Vee) cursor_to(pos Position) {
+	v.active_buffer().cursor_to(pos.x, pos.y)
 }
+/*
+fn (mut v Vee) buf_cursor_to(buffer_id int, pos Position) {
+	v.buffer_at(buffer_id).cursor_to(pos.x, pos.y)
+}*/
 
-pub fn (mut v Vee) buf_put(buffer_id int, input InputType) {
-	mut cmd := PutCmd{
-		vee: v
-		buffer_id: buffer_id
-		input: input
+// move_cursor will navigate the cursor within the buffer bounds
+pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
+	//v.active_buffer().move_cursor(amount, movement)
+
+	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
+	// NOTE that these aren't freed
+	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
+	mut cmd := &MoveCursorCmd{
+		buffer: v.active_buffer()
+		amount: amount
+		movement: movement
 	}
-	println(voidptr(&v))
-	println(voidptr(v))
-	cmd.do()
-	v.command_history.push(cmd)
+	v.invoker.add_and_execute(cmd)
 }
 
-pub fn (mut v Vee) del(amount int) string {
-	return v.buf_del(v.active_buffer_index, amount)
-}
+pub fn (mut v Vee) move_to_word(movement Movement) {
+	//v.active_buffer().move_to_word(movement)
 
-pub fn (mut v Vee) buf_del(buffer_id int, amount int) string {
-	mut b := v.buffer_at(buffer_id)
-	return b.del(amount)
+	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
+	// NOTE that these aren't freed
+	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
+	mut cmd := &MoveToWordCmd{
+		buffer: v.active_buffer()
+		movement: movement
+	}
+	v.invoker.add_and_execute(cmd)
 }
 
 /*
- * Commands
+ * Undo/redo -able buffer commands
  */
-struct PutCmd {
-mut:
-	vee &Vee
-	buffer_id int
-	pos Position
-	input InputType
-}
-fn (cmd PutCmd) str() string {
-	return 'PutCmd {
-	vee: ${ptr_str(cmd.vee)}
-	buffer_id: $cmd.buffer_id
-	pod: $cmd.pos
-	input: $cmd.input
-}'
+pub fn (mut v Vee) put(input InputType) {
+	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
+	// NOTE that these aren't freed
+	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
+	mut cmd := &PutCmd{
+		buffer: v.active_buffer()
+		input: input
+	}
+	v.invoker.add_and_execute(cmd)
 }
 
-fn (mut cmd PutCmd) do() {
-	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'\n$cmd $cmd.buffer_id')
+pub fn (mut v Vee) del(amount int) {
+	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
+	// NOTE that these aren't freed
+	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
+	mut cmd := &DelCmd{
+		buffer: v.active_buffer()
+		amount: amount
 	}
-	mut b := cmd.vee.buffer_at(cmd.buffer_id)
-	b.put(cmd.input)
-	cmd.pos = b.cursor.pos
-}
-
-fn (mut cmd PutCmd) undo() {
-	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'\n$cmd $cmd.buffer_id')
-	}
-	mut b := cmd.vee.buffer_at(cmd.buffer_id)
-	b.move_cursor_to(cmd.pos.x, cmd.pos.y)
-	b.del(-cmd.input.len())
+	v.invoker.add_and_execute(cmd)
 }
 
 //
 pub fn (mut v Vee) undo() bool {
-	if v.command_history.len > 0 {
-		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
-		}
-		cmd := v.command_history.pop() or { return false }
-		cmd.undo()
-		return true
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
 	}
-	return false
+	mut cmd := v.invoker.undo() or { return false }
+
+	if cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+		cmd = v.invoker.peek(.undo) or { return true }
+		for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+			v.invoker.undo() or { return true }
+			cmd = v.invoker.peek(.undo) or { return true }
+		}
+	}
+
+	if cmd is PutCmd {
+		cmd = v.invoker.peek(.undo) or { return true }
+		for cmd is PutCmd {
+			if mut cmd is PutCmd {
+				str := cmd.input.str()
+				if str.contains('\n') {
+					return true
+				}
+			}
+			v.invoker.undo() or { return true }
+			cmd = v.invoker.peek(.undo) or { return true }
+		}
+	}
+
+	if cmd is DelCmd {
+		cmd = v.invoker.peek(.undo) or { return true }
+		for cmd is DelCmd {
+			if mut cmd is DelCmd {
+				str := cmd.deleted.str()
+				if str.contains('\n') {
+					return true
+				}
+			}
+			v.invoker.undo() or { return true }
+			cmd = v.invoker.peek(.undo) or { return true }
+		}
+	}
+
+	return true
 }
 
 pub fn (mut v Vee) redo() bool {
-	if v.command_history.len > 0 {
-		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
-		}
-		//v.command_history.push(cmd)
-		//TODO v.command_history.pop().redo()
-		return true
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
 	}
-	return false
+	mut cmd := v.invoker.redo() or { return false }
+
+	if cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+		cmd = v.invoker.peek(.redo) or { return true }
+		for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+			v.invoker.redo() or { return true }
+			cmd = v.invoker.peek(.redo) or { return true }
+		}
+	}
+
+	if cmd is PutCmd {
+		cmd = v.invoker.peek(.redo) or { return true }
+		for cmd is PutCmd {
+			if mut cmd is PutCmd {
+				str := cmd.input.str()
+				if str.contains('\n') {
+					return true
+				}
+			}
+			v.invoker.redo() or { return true }
+			cmd = v.invoker.peek(.redo) or { return true }
+		}
+	}
+
+	if cmd is DelCmd {
+		cmd = v.invoker.peek(.redo) or { return true }
+		for cmd is DelCmd {
+			if mut cmd is DelCmd {
+				str := cmd.deleted.str()
+				if str.contains('\n') {
+					return true
+				}
+			}
+			v.invoker.redo() or { return true }
+			cmd = v.invoker.peek(.redo) or { return true }
+		}
+	}
+	return true
 }
+
 
