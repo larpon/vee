@@ -15,9 +15,25 @@ pub enum Movement {
 	end
 }
 
+pub enum Mode {
+	edit
+	@select
+}
+
+struct Selection {
+	buffer &Buffer
+mut:
+	from   Position
+	to     Position
+}
+
+[heap]
 struct Buffer {
 	line_break string = '\n'
 	tab_width  int = 4
+mut:
+	mode       Mode = .edit
+	selections []Selection
 pub mut:
 	lines      []string
 	cursor     Cursor
@@ -29,6 +45,10 @@ pub fn new_buffer() &Buffer {
 	m := Magnet{ buffer: b }
 	b.magnet = m
 	return b
+}
+
+pub fn (mut b Buffer) set_mode(mode Mode) {
+	b.mode = mode
 }
 
 pub fn (b Buffer) flatten(s string) string {
@@ -445,14 +465,6 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 	b.magnet.record()
 }
 
-fn imax(x int, y int) int {
-	return if x < y { y } else { x }
-}
-
-fn imin(x int, y int) int {
-	return if x < y { x } else { y }
-}
-
 struct Position {
 pub mut:
 	x int
@@ -527,3 +539,32 @@ fn (mut m Magnet) move_offrecord(amount int, movement Movement) {
 	m.buffer.move_cursor(amount, movement)
 	m.record = prev_recording_state
 }*/
+
+/*
+ * Selections
+ */
+pub fn (mut b Buffer) set_default_select(from Position, to Position) {
+	b.set_select(0, from, to)
+}
+
+pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
+	if b.mode != .@select {
+		b.mode = .@select
+	}
+	if b.selections.len == 0 {
+		b.selections << Selection{
+			from: from
+			to: to
+			buffer: b
+		}
+	} else {
+		// TODO boounds check or map ??
+		b.selections[index].from = from
+		b.selections[index].to = to
+	}
+}
+
+pub fn (b Buffer) selection(index int) Selection {
+	// TODO boounds check or map ??
+	return b.selections[index]
+}
