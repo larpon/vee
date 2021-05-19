@@ -80,15 +80,9 @@ pub fn (mut v Vee) add_buffer(b &Buffer) int {
 pub fn (mut v Vee) cursor_to(pos Position) {
 	v.active_buffer().cursor_to(pos.x, pos.y)
 }
-/*
-fn (mut v Vee) buf_cursor_to(buffer_id int, pos Position) {
-	v.buffer_at(buffer_id).cursor_to(pos.x, pos.y)
-}*/
 
 // move_cursor will navigate the cursor within the buffer bounds
 pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
-	//v.active_buffer().move_cursor(amount, movement)
-
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
 	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
