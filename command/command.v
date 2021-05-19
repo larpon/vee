@@ -1,9 +1,9 @@
 // Copyright (c) 2020 Lars Pontoppidan. All rights reserved.
 // Use of this source code is governed by the MIT license distributed with this software.
-module undo
+module command
 
 pub enum QueueType {
-	command
+	execute
 	undo
 	redo
 }
@@ -35,7 +35,7 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'('+queue_type.str()+')')
 	}
 	match queue_type {
-		.command {
+		.execute {
 			if i.queue.len > 0 {
 				return i.queue.last()
 			}

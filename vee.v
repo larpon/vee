@@ -2,14 +2,14 @@
 // Use of this source code is governed by the MIT license distributed with this software.
 module vee
 
-import vee.undo
+import vee.command
 
 [heap]
 struct Vee {
 mut:
 	buffers       []&Buffer
 	active_buffer_id int
-	invoker undo.Invoker
+	invoker command.Invoker
 }
 
 pub struct VeeConfig {
