@@ -7,9 +7,9 @@ import vee.command
 [heap]
 struct Vee {
 mut:
-	buffers       []&Buffer
+	buffers          []&Buffer
 	active_buffer_id int
-	invoker command.Invoker
+	invoker          command.Invoker
 }
 
 pub struct VeeConfig {
@@ -21,7 +21,9 @@ pub fn new(config VeeConfig) &Vee {
 }
 
 pub fn (mut v Vee) free() {
-	$if debug { eprintln(@MOD+'.'+@STRUCT+'::'+@FN) }
+	$if debug {
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
+	}
 	unsafe {
 		for b in v.buffers {
 			b.free()
@@ -45,12 +47,13 @@ pub fn (mut v Vee) buffer_at(id int) &Buffer {
 		// Add default buffer
 		buf_idx = v.new_buffer()
 		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' added initial buffer')
+			eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' added initial buffer')
 		}
 	}
 	if buf_idx < 0 || buf_idx >= v.buffers.len {
 		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' invalid index "$buf_idx". Returning active')
+			eprintln(@MOD + '.' + @STRUCT + '::' + @FN +
+				' invalid index "$buf_idx". Returning active')
 		}
 		// TODO also check that the active index can be reached
 		buf_idx = v.active_buffer_id
@@ -71,12 +74,12 @@ pub fn (v Vee) dmp() {
 pub fn (mut v Vee) add_buffer(b &Buffer) int {
 	v.buffers << b
 	// TODO signal_buffer_added(b)
-	return v.buffers.len-1 // buffers.len-1, i.e. the index serves as the id
+	return v.buffers.len - 1 // buffers.len-1, i.e. the index serves as the id
 }
 
 /*
- * Cursor movement
- */
+* Cursor movement
+*/
 pub fn (mut v Vee) cursor_to(pos Position) {
 	v.active_buffer().cursor_to(pos.x, pos.y)
 }
@@ -95,7 +98,7 @@ pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
 }
 
 pub fn (mut v Vee) move_to_word(movement Movement) {
-	//v.active_buffer().move_to_word(movement)
+	// v.active_buffer().move_to_word(movement)
 
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -108,8 +111,8 @@ pub fn (mut v Vee) move_to_word(movement Movement) {
 }
 
 /*
- * Undo/redo -able buffer commands
- */
+* Undo/redo -able buffer commands
+*/
 pub fn (mut v Vee) put(input InputType) {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -154,7 +157,7 @@ pub fn (mut v Vee) del(amount int) {
 //
 pub fn (mut v Vee) undo() bool {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut cmd := v.invoker.undo() or { return false }
 
@@ -163,7 +166,7 @@ pub fn (mut v Vee) undo() bool {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' MoveXXXCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
 				}
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
@@ -173,7 +176,7 @@ pub fn (mut v Vee) undo() bool {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is PutCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
 				}
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
@@ -183,7 +186,7 @@ pub fn (mut v Vee) undo() bool {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is PutLineBreakCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutLineBreakCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
 				}
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
@@ -193,7 +196,7 @@ pub fn (mut v Vee) undo() bool {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is DelCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' DelCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
 				}
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
@@ -209,7 +212,7 @@ pub fn (mut v Vee) undo() bool {
 
 pub fn (mut v Vee) redo() bool {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut cmd := v.invoker.redo() or { return false }
 	match cmd {
@@ -217,7 +220,7 @@ pub fn (mut v Vee) redo() bool {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' MoveXXXCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
 				}
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
@@ -227,7 +230,7 @@ pub fn (mut v Vee) redo() bool {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is PutCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
 				}
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
@@ -237,7 +240,7 @@ pub fn (mut v Vee) redo() bool {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is PutLineBreakCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutLineBreakCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
 				}
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
@@ -247,7 +250,7 @@ pub fn (mut v Vee) redo() bool {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is DelCmd {
 				$if debug {
-					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' DelCmd streak')
+					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
 				}
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }

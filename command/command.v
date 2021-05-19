@@ -17,8 +17,8 @@ interface ICommand {
 struct Invoker {
 mut:
 	command_queue []ICommand
-	undo_stack []ICommand
-	redo_stack []ICommand
+	undo_stack    []ICommand
+	redo_stack    []ICommand
 }
 
 pub fn (mut i Invoker) add_and_execute(cmd ICommand) {
@@ -32,7 +32,7 @@ pub fn (mut i Invoker) add(cmd ICommand) {
 
 pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'('+queue_type.str()+')')
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + '(' + queue_type.str() + ')')
 	}
 	match queue_type {
 		.execute {
@@ -58,7 +58,7 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 pub fn (mut i Invoker) execute() bool {
 	if i.command_queue.len > 0 {
 		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
 		i.redo_stack.clear()
 		cmd := i.command_queue.pop()
@@ -72,7 +72,7 @@ pub fn (mut i Invoker) execute() bool {
 pub fn (mut i Invoker) undo() ?ICommand {
 	if i.undo_stack.len > 0 {
 		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
 		cmd := i.undo_stack.pop()
 		cmd.undo()
@@ -85,7 +85,7 @@ pub fn (mut i Invoker) undo() ?ICommand {
 pub fn (mut i Invoker) redo() ?ICommand {
 	if i.redo_stack.len > 0 {
 		$if debug {
-			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
 		cmd := i.redo_stack.pop()
 		cmd.redo()

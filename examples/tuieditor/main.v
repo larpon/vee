@@ -7,21 +7,20 @@ import vee
 
 struct App {
 mut:
-	tui     &ui.Context = 0
-	ed      &vee.Vee = 0
-	file    string
-	status  string
-	status_timeout       int
-	footer_height int = 2
-	viewport      int
-	debug_mode bool = true
+	tui            &ui.Context = 0
+	ed             &vee.Vee    = 0
+	file           string
+	status         string
+	status_timeout int
+	footer_height  int = 2
+	viewport       int
+	debug_mode     bool = true
 }
 
 fn (mut a App) set_status(msg string, duration_ms int) {
 	a.status = msg
 	a.status_timeout = duration_ms
 }
-
 
 fn (mut a App) undo() {
 	if a.ed.undo() {
@@ -51,13 +50,13 @@ fn (a &App) view_height() int {
 
 fn (mut a App) footer() {
 	w, h := a.tui.window_width, a.tui.window_height
-	//term.set_cursor_position({x: 0, y: h-1})
+	// term.set_cursor_position({x: 0, y: h-1})
 
 	mut b := a.ed.active_buffer()
 
 	mut finfo := ''
 	if a.file.len > 0 {
-		finfo = ' ('+os.file_name(a.file)+')'
+		finfo = ' (' + os.file_name(a.file) + ')'
 	}
 
 	mut status := a.status
@@ -73,23 +72,23 @@ fn (mut a App) footer() {
 	if a.status_timeout <= 0 {
 		status = ''
 	} else {
-		a.tui.set_bg_color({
+		a.tui.set_bg_color(
 			r: 200
 			g: 200
 			b: 200
-		})
-		a.tui.set_color({
+		)
+		a.tui.set_color(
 			r: 0
 			g: 0
 			b: 0
-		})
+		)
 		a.tui.draw_text((w + 4 - status.len) / 2, h - 1, ' $status ')
 		a.tui.reset()
 
 		if a.status_timeout <= 0 {
 			a.status_timeout = 0
 		} else {
-			a.status_timeout -= int(1000/60/*a.tui.cfg.frame_rate*/)
+			a.status_timeout -= int(1000 / 60) // a.tui.cfg.frame_rate
 		}
 	}
 
@@ -99,17 +98,19 @@ fn (mut a App) footer() {
 }
 
 fn (mut a App) dbg_overlay() {
-	if !a.debug_mode { return }
+	if !a.debug_mode {
+		return
+	}
 	w, h := a.tui.window_width, a.tui.window_height
-	w050 := int(f32(w)*0.5)
-	//term.set_cursor_position({x: w050, y: 0})
+	w050 := int(f32(w) * 0.5)
+	// term.set_cursor_position({x: w050, y: 0})
 	mut b := a.ed.active_buffer()
 
 	cur_line := b.cur_line_flat()
-	line_snippet := if cur_line.len > w050-30 { cur_line[..w050-30] } else { cur_line }
+	line_snippet := if cur_line.len > w050 - 30 { cur_line[..w050 - 30] } else { cur_line }
 
-	//buffer_flat := b.flat()
-	//buffer_snippet := if flat.len > w050-30 { flat[..w050-30] } else { flat }
+	// buffer_flat := b.flat()
+	// buffer_snippet := if flat.len > w050-30 { flat[..w050-30] } else { flat }
 
 	text := 'PID $os.getpid()
 Char  "${literal(b.cur_char())}"
@@ -123,26 +124,27 @@ ${flatten(b.magnet.str())}
 '
 	a.tui.reset_bg_color()
 	a.tui.reset_color()
-	a.tui.draw_rect(w050, 0, w, h-a.footer_height)
+	a.tui.draw_rect(w050, 0, w, h - a.footer_height)
 	lines := text.split('\n')
 	for i, line in lines {
-		a.tui.draw_text(w050+2, 1+i, line)
+		a.tui.draw_text(w050 + 2, 1 + i, line)
 	}
-	a.tui.set_bg_color({
-			r: 200
-			g: 200
-			b: 200
-	})
-	a.tui.draw_line(w050, 0, w050, h-a.footer_height)
+	a.tui.set_bg_color(
+		r: 200
+		g: 200
+		b: 200
+	)
+	a.tui.draw_line(w050, 0, w050, h - a.footer_height)
 	a.tui.reset_bg_color()
 }
 
 fn flatten(s string) string {
-	return s.replace('\t', ' ').replace('  ',' ').replace('\n',' ').replace('  ',' ').replace('  ',' ').replace('  ',' ')
+	return s.replace('\t', ' ').replace('  ', ' ').replace('\n', ' ').replace('  ', ' ').replace('  ',
+		' ').replace('  ', ' ')
 }
 
 fn literal(s string) string {
-	return s.replace('\t', r'\t').replace('\n',r'\n')
+	return s.replace('\t', r'\t').replace('\n', r'\n')
 }
 
 fn init(x voidptr) {
@@ -167,7 +169,7 @@ fn init(x voidptr) {
 		if os.is_file(a.file) {
 			a.tui.set_window_title(a.file)
 			mut b := a.ed.active_buffer()
-			content := os.read_file(a.file) or { panic(err)}
+			content := os.read_file(a.file) or { panic(err) }
 			b.put(content)
 			b.cursor_to(init_x, init_y)
 		}

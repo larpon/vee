@@ -19,33 +19,35 @@ pub:
 struct Selection {
 	buffer &Buffer
 mut:
-	from   Position
-	to     Position
+	from Position
+	to   Position
 }
 
 [heap]
 struct Buffer {
 	line_break string = '\n'
-	tab_width  int = 4
+	tab_width  int    = 4
 mut:
 	mode       Mode = .edit
 	selections []Selection
 pub mut:
-	lines      []string
-	cursor     Cursor
-	magnet     Magnet
+	lines  []string
+	cursor Cursor
+	magnet Magnet
 }
 
 pub struct BufferConfig {
 	line_break string = '\n'
-	tab_width  int = 4
+	tab_width  int    = 4
 }
 
 pub fn new_buffer(config BufferConfig) &Buffer {
 	mut b := &Buffer{
 		line_break: config.line_break
 	}
-	m := Magnet{ buffer: b }
+	m := Magnet{
+		buffer: b
+	}
 	b.magnet = m
 	return b
 }
@@ -67,7 +69,7 @@ pub fn (b Buffer) raw() string {
 }
 
 pub fn (mut b Buffer) view(from int, to int) View {
-	//pos := b.cursor.pos
+	// pos := b.cursor.pos
 
 	b.magnet.activate()
 
@@ -84,7 +86,8 @@ pub fn (mut b Buffer) view(from int, to int) View {
 	}
 	x := vx
 
-	/*if tabs > 0 && x > b.magnet.x {
+	/*
+	if tabs > 0 && x > b.magnet.x {
 		x = b.magnet.x
 		b.cursor.pos.x = x
 	}*/
@@ -99,7 +102,7 @@ pub fn (mut b Buffer) view(from int, to int) View {
 	return View{
 		raw: raw.replace('\t', strings.repeat(` `, b.tab_width))
 		cursor: {
-			pos: Position {
+			pos: Position{
 				x: x
 				y: b.cursor.pos.y
 			}
@@ -115,7 +118,7 @@ pub fn (b Buffer) eol() bool {
 
 pub fn (b Buffer) eof() bool {
 	_, y := b.cursor.xy()
-	return y >= b.lines.len-1
+	return y >= b.lines.len - 1
 }
 
 pub fn (b Buffer) cur_char() string {
@@ -159,7 +162,7 @@ pub fn (b Buffer) cursor_index() int {
 			i += b.cursor.pos.x
 			break
 		}
-		i += line.len+1
+		i += line.len + 1
 	}
 	return i
 }
@@ -168,11 +171,13 @@ pub fn (mut b Buffer) put(ipt InputType) {
 	s := ipt.str()
 	$if debug {
 		flat_s := b.flatten(s)
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "$flat_s"')
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$flat_s"')
 	}
 	has_line_ending := s.contains(b.line_break)
 	x, y := b.cursor.xy()
-	if b.lines.len == 0 { b.lines.prepend('') }
+	if b.lines.len == 0 {
+		b.lines.prepend('')
+	}
 	line := b.lines[y]
 	l := line[..x]
 	r := line[x..]
@@ -185,7 +190,7 @@ pub fn (mut b Buffer) put(ipt InputType) {
 		last := lines[lines.len - 1]
 		b.cursor.set(last.len, y + lines.len - 1)
 		if s == b.line_break {
-			b.cursor.set(0,b.cursor.pos.y)
+			b.cursor.set(0, b.cursor.pos.y)
 		}
 	} else {
 		b.lines[y] = l + s + r
@@ -199,7 +204,8 @@ pub fn (mut b Buffer) put(ipt InputType) {
 
 pub fn (mut b Buffer) put_line_break() {
 	b.put(b.line_break)
-	/*x, y := b.cursor.xy()
+	/*
+	x, y := b.cursor.xy()
 	if b.lines.len == 0 { b.lines.prepend('') }
 	line := b.lines[y]
 	l := line[..x]
@@ -214,17 +220,23 @@ pub fn (mut b Buffer) put_line_break() {
 	b.cursor.set(0,b.cursor.pos.y)
 	b.magnet.record()*/
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
 	}
 }
 
 pub fn (mut b Buffer) del(amount int) string {
-	if amount == 0 { return '' }
+	if amount == 0 {
+		return ''
+	}
 	x, y := b.cursor.xy()
 	if amount < 0 { // don't delete left if we're at 0,0
-		if x == 0 && y == 0 { return '' }
+		if x == 0 && y == 0 {
+			return ''
+		}
 	} else {
-		if x >= b.cur_line().len && y >= b.lines.len-1 { return '' }
+		if x >= b.cur_line().len && y >= b.lines.len - 1 {
+			return ''
+		}
 	}
 	mut removed := ''
 	if amount < 0 { // backspace (backward)
@@ -242,19 +254,21 @@ pub fn (mut b Buffer) del(amount int) string {
 		removed = raw_buffer[from_i..to_i]
 		*/
 
-		removed = b.raw()[i+amount..i]
+		removed = b.raw()[i + amount..i]
 		mut left := amount * -1
 
-		//println(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}" (${b.cursor.pos.x},${b.cursor.pos.y}/$i) $amount')
+		// println(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}" (${b.cursor.pos.x},${b.cursor.pos.y}/$i) $amount')
 
 		for li := y; li >= 0 && left > 0; li-- {
 			ln := b.lines[li]
-			//println(@MOD+'.'+@STRUCT+'::'+@FN+' left: $left, line length: $ln.len')
-			if left == ln.len+1 { // All of the line + 1 - since we're going backwards the "+1" is the line break delimiter.
+			// println(@MOD+'.'+@STRUCT+'::'+@FN+' left: $left, line length: $ln.len')
+			if left == ln.len + 1 { // All of the line + 1 - since we're going backwards the "+1" is the line break delimiter.
 				b.lines.delete(li)
 				left = 0
-				if y == 0 { return '' }
-				line_above := b.lines[li-1]
+				if y == 0 {
+					return ''
+				}
+				line_above := b.lines[li - 1]
 				b.cursor.pos.x = line_above.len
 				b.cursor.pos.y--
 				break
@@ -262,8 +276,10 @@ pub fn (mut b Buffer) del(amount int) string {
 				b.lines.delete(li)
 				if ln.len == 0 { // line break delimiter
 					left--
-					if y == 0 { return '' }
-					line_above := b.lines[li-1]
+					if y == 0 {
+						return ''
+					}
+					line_above := b.lines[li - 1]
 					b.cursor.pos.x = line_above.len
 				} else {
 					left -= ln.len
@@ -271,14 +287,16 @@ pub fn (mut b Buffer) del(amount int) string {
 				b.cursor.pos.y--
 			} else {
 				if x == 0 {
-					if y == 0 { return '' }
-					line_above := b.lines[li-1]
+					if y == 0 {
+						return ''
+					}
+					line_above := b.lines[li - 1]
 					if ln.len == 0 { // at line break
 						b.lines.delete(li)
 						b.cursor.pos.y--
 						b.cursor.pos.x = line_above.len
 					} else {
-						b.lines[li-1] = line_above + ln
+						b.lines[li - 1] = line_above + ln
 						b.lines.delete(li)
 						b.cursor.pos.y--
 						b.cursor.pos.x = line_above.len
@@ -287,7 +305,7 @@ pub fn (mut b Buffer) del(amount int) string {
 					b.lines[li] = b.lines[li][left..]
 					b.cursor.pos.x = 0
 				} else {
-					b.lines[li] = ln[..x-left]+ln[x..]
+					b.lines[li] = ln[..x - left] + ln[x..]
 					b.cursor.pos.x -= left
 				}
 				left = 0
@@ -295,10 +313,10 @@ pub fn (mut b Buffer) del(amount int) string {
 			}
 		}
 	} else { // delete (forward)
-		i := b.cursor_index()+1
+		i := b.cursor_index() + 1
 		raw_buffer := b.raw()
 		from_i := i
-		mut to_i := i+amount
+		mut to_i := i + amount
 
 		if to_i > raw_buffer.len {
 			to_i = raw_buffer.len
@@ -319,7 +337,7 @@ pub fn (mut b Buffer) del(amount int) string {
 				b.lines.delete(li)
 				left -= ln.len
 			} else {
-				b.lines[li] = ln[..x]+ln[x+left..]
+				b.lines[li] = ln[..x] + ln[x + left..]
 				left = 0
 			}
 		}
@@ -330,18 +348,20 @@ pub fn (mut b Buffer) del(amount int) string {
 	}*/
 	$if debug {
 		flat_removed := b.flatten(removed)
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"-"$flat_removed"')
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"-"$flat_removed"')
 	}
 	return removed
 }
 
 fn (b Buffer) dmp() {
-	eprintln('$b.cursor.pos\n${b.raw()}')
+	eprintln('$b.cursor.pos\n$b.raw()')
 }
 
 // free frees all buffer memory
 fn (mut b Buffer) free() {
-	$if debug { eprintln(@MOD+'.'+@STRUCT+'::'+@FN) }
+	$if debug {
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
+	}
 	unsafe {
 		for line in b.lines {
 			line.free()
@@ -391,44 +411,44 @@ pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 			if pos.y - amount >= 0 {
 				b.cursor.move(0, -amount)
 				b.sync_cursor()
-				//b.magnet.activate()
+				// b.magnet.activate()
 			}
 		}
 		.down {
 			if pos.y + amount < b.lines.len {
 				b.cursor.move(0, amount)
 				b.sync_cursor()
-				//b.magnet.activate()
+				// b.magnet.activate()
 			}
 		}
 		.left {
 			if pos.x - amount >= 0 {
-				b.cursor.move(-amount,0)
+				b.cursor.move(-amount, 0)
 				b.sync_cursor()
 				b.magnet.record()
 			}
 		}
 		.right {
 			if pos.x + amount <= b.cur_line().len {
-				b.cursor.move(amount,0)
+				b.cursor.move(amount, 0)
 				b.sync_cursor()
 				b.magnet.record()
 			}
 		}
 		.page_up {
 			dlines := imin(b.cursor.pos.y, amount)
-			b.cursor.move(0,-dlines)
+			b.cursor.move(0, -dlines)
 			b.sync_cursor()
-			//b.magnet.activate()
+			// b.magnet.activate()
 		}
 		.page_down {
-			dlines := imin(b.lines.len-1, b.cursor.pos.y + amount) - b.cursor.pos.y
-			b.cursor.move(0,dlines)
+			dlines := imin(b.lines.len - 1, b.cursor.pos.y + amount) - b.cursor.pos.y
+			b.cursor.move(0, dlines)
 			b.sync_cursor()
-			//b.magnet.activate()
+			// b.magnet.activate()
 		}
 		.home {
-			b.cursor.set(0,b.cursor.pos.y)
+			b.cursor.set(0, b.cursor.pos.y)
 			b.sync_cursor()
 			b.magnet.record()
 		}
@@ -454,13 +474,19 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 		x = 0
 	}
 	// first, move past all non-`a-zA-Z0-9_` characters
-	for x+a >= 0 && x+a < line.len && !(line[x+a].is_letter() || line[x+a].is_digit() || line[x+a] == `_`) { x += a }
+	for x + a >= 0 && x + a < line.len && !(line[x + a].is_letter()
+		|| line[x + a].is_digit() || line[x + a] == `_`) {
+		x += a
+	}
 	// then, move past all the letters and numbers
-	for x+a >= 0 && x+a < line.len &&  (line[x+a].is_letter() || line[x+a].is_digit() || line[x+a] == `_`) { x += a }
+	for x + a >= 0 && x + a < line.len && (line[x + a].is_letter()
+		|| line[x + a].is_digit() || line[x + a] == `_`) {
+		x += a
+	}
 	// if the cursor is out of bounds, move it to the next/previous line
 	if x + a >= 0 && x + a <= line.len {
 		x += a
-	} else if a < 0 && y+1 > b.lines.len && y-1 >= 0 {
+	} else if a < 0 && y + 1 > b.lines.len && y - 1 >= 0 {
 		y += a
 		x = 0
 	}
@@ -469,8 +495,8 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 }
 
 /*
- * Selections
- */
+* Selections
+*/
 pub fn (mut b Buffer) set_default_select(from Position, to Position) {
 	b.set_select(0, from, to)
 }

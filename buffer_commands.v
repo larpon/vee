@@ -3,16 +3,16 @@
 module vee
 
 /*
- * Buffer commands
- */
+* Buffer commands
+*/
 struct PutCmd {
 mut:
 	buffer &Buffer
-	input InputType
+	input  InputType
 }
 
 fn (cmd PutCmd) str() string {
-	return @STRUCT+' {
+	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
 	input: $cmd.input
 }'
@@ -25,7 +25,7 @@ fn (mut cmd PutCmd) do() {
 
 fn (mut cmd PutCmd) undo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.del(-cmd.input.len())
@@ -33,7 +33,7 @@ fn (mut cmd PutCmd) undo() {
 
 fn (mut cmd PutCmd) redo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.put(cmd.input)
@@ -46,7 +46,7 @@ mut:
 }
 
 fn (cmd PutLineBreakCmd) str() string {
-	return @STRUCT+' {
+	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
 }'
 }
@@ -57,7 +57,7 @@ fn (mut cmd PutLineBreakCmd) do() {
 
 fn (mut cmd PutLineBreakCmd) undo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.del(-1)
@@ -65,7 +65,7 @@ fn (mut cmd PutLineBreakCmd) undo() {
 
 fn (mut cmd PutLineBreakCmd) redo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	cmd.buffer.put_line_break()
 }
@@ -73,14 +73,15 @@ fn (mut cmd PutLineBreakCmd) redo() {
 //
 struct DelCmd {
 mut:
-	buffer &Buffer
-	amount int
+	buffer  &Buffer
+	amount  int
 	deleted string
-	pos Position
+	pos     Position
 }
 
 fn (cmd DelCmd) str() string {
-	return @STRUCT+' {
+	return @STRUCT +
+		' {
 	buffer: ${ptr_str(cmd.buffer)}
 	amount: $cmd.amount
 	deleted: $cmd.deleted
@@ -90,7 +91,7 @@ fn (cmd DelCmd) str() string {
 
 fn (mut cmd DelCmd) do() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	cmd.pos = b.cursor.pos
@@ -99,7 +100,7 @@ fn (mut cmd DelCmd) do() {
 
 fn (mut cmd DelCmd) undo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	if cmd.amount < 0 {
@@ -111,10 +112,9 @@ fn (mut cmd DelCmd) undo() {
 	}
 }
 
-
 fn (mut cmd DelCmd) redo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	if cmd.amount < 0 {
@@ -128,15 +128,15 @@ fn (mut cmd DelCmd) redo() {
 //
 struct MoveCursorCmd {
 mut:
-	buffer &Buffer
-	amount int
+	buffer   &Buffer
+	amount   int
 	movement Movement
 	from_pos Position
-	to_pos Position
+	to_pos   Position
 }
 
 fn (cmd MoveCursorCmd) str() string {
-	return @STRUCT+' {
+	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
 	movement: $cmd.movement
 }'
@@ -144,7 +144,7 @@ fn (cmd MoveCursorCmd) str() string {
 
 fn (mut cmd MoveCursorCmd) do() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	cmd.from_pos = b.cursor.pos
@@ -154,7 +154,7 @@ fn (mut cmd MoveCursorCmd) do() {
 
 fn (mut cmd MoveCursorCmd) undo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.cursor_to(cmd.from_pos.x, cmd.from_pos.y)
@@ -162,25 +162,25 @@ fn (mut cmd MoveCursorCmd) undo() {
 
 fn (mut cmd MoveCursorCmd) redo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.cursor_to(cmd.to_pos.x, cmd.to_pos.y)
 }
 
 /*
- * MoveToWord
- */
+* MoveToWord
+*/
 struct MoveToWordCmd {
 mut:
-	buffer &Buffer
+	buffer   &Buffer
 	movement Movement
 	from_pos Position
-	to_pos Position
+	to_pos   Position
 }
 
 fn (cmd MoveToWordCmd) str() string {
-	return @STRUCT+' {
+	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
 	movement: $cmd.movement
 }'
@@ -188,7 +188,7 @@ fn (cmd MoveToWordCmd) str() string {
 
 fn (mut cmd MoveToWordCmd) do() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	cmd.from_pos = b.cursor.pos
@@ -198,16 +198,15 @@ fn (mut cmd MoveToWordCmd) do() {
 
 fn (mut cmd MoveToWordCmd) undo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.cursor_to(cmd.from_pos.x, cmd.from_pos.y)
 }
 
-
 fn (mut cmd MoveToWordCmd) redo() {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 	}
 	mut b := cmd.buffer
 	b.cursor_to(cmd.to_pos.x, cmd.to_pos.y)
