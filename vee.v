@@ -32,7 +32,7 @@ pub fn (mut v Vee) free() {
 }
 
 pub fn (mut v Vee) new_buffer() int {
-	b := new_buffer()
+	b := new_buffer(BufferConfig{})
 	return v.add_buffer(b)
 }
 

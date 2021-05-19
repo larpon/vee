@@ -4,20 +4,16 @@ module vee
 
 import strings
 
-pub enum Movement {
-	up
-	down
-	left
-	right
-	page_up
-	page_down
-	home
-	end
+struct Position {
+pub mut:
+	x int
+	y int
 }
 
-pub enum Mode {
-	edit
-	@select
+struct View {
+pub:
+	raw    string
+	cursor Cursor
 }
 
 struct Selection {
@@ -40,8 +36,15 @@ pub mut:
 	magnet     Magnet
 }
 
-pub fn new_buffer() &Buffer {
-	mut b := &Buffer{}
+pub struct BufferConfig {
+	line_break string = '\n'
+	tab_width  int = 4
+}
+
+pub fn new_buffer(config BufferConfig) &Buffer {
+	mut b := &Buffer{
+		line_break: config.line_break
+	}
 	m := Magnet{ buffer: b }
 	b.magnet = m
 	return b
@@ -336,7 +339,7 @@ fn (b Buffer) dmp() {
 	eprintln('$b.cursor.pos\n${b.raw()}')
 }
 
-// free will free all buffer memory
+// free frees all buffer memory
 fn (mut b Buffer) free() {
 	$if debug { eprintln(@MOD+'.'+@STRUCT+'::'+@FN) }
 	unsafe {
@@ -347,14 +350,14 @@ fn (mut b Buffer) free() {
 	}
 }
 
-// cursor_to will set the cursor within the buffer bounds
+// cursor_to sets the cursor within the buffer bounds
 pub fn (mut b Buffer) cursor_to(x int, y int) {
 	b.cursor.set(x, y)
 	b.sync_cursor()
 	b.magnet.record()
 }
 
-// sync_cursor will sync the cursor position to be within the buffer bounds
+// sync_cursor syncs the cursor position to be within the buffer bounds
 fn (mut b Buffer) sync_cursor() {
 	x, y := b.cursor.xy()
 	if x < 0 {
@@ -380,7 +383,7 @@ fn (mut b Buffer) sync_cursor() {
 	}
 }
 
-// move_cursor will navigate the cursor within the buffer bounds
+// move_cursor navigates the cursor within the buffer bounds
 pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 	pos := b.cursor.pos
 	match movement {
@@ -465,81 +468,6 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 	b.magnet.record()
 }
 
-struct Position {
-pub mut:
-	x int
-	y int
-}
-
-struct Cursor {
-pub mut:
-	pos Position
-}
-
-fn (mut c Cursor) set(x int, y int) {
-	c.pos.x = x
-	c.pos.y = y
-}
-
-fn (mut c Cursor) move(x int, y int) {
-	c.pos.x += x
-	c.pos.y += y
-}
-
-fn (c Cursor) xy() (int, int) {
-	return c.pos.x, c.pos.y
-}
-
-struct View {
-pub:
-	raw    string
-	cursor Cursor
-}
-
-struct Magnet {
-mut:
-	buffer &Buffer
-//	record bool = true
-	x  int
-}
-
-pub fn (m Magnet) str() string {
-	mut s := @MOD+'.Magnet{
-	x: $m.x'
-	s += '\n}'
-	return s
-}
-
-
-// activate will adjust the cursor to as close valuses as the magnet as possible
-pub fn (mut m Magnet) activate() {
-	if m.x == 0 || isnil(m.buffer) { return }
-	mut b := m.buffer
-	//x, _ := m.buffer.cursor.xy()
-	//line := b.cur_line()
-
-	//if line.len == 0 {
-	//	b.cursor.pos.x = 0
-	//} else {
-	b.cursor.pos.x = m.x
-	//}
-	b.sync_cursor()
-}
-
-// record will record the placement of the cursor
-fn (mut m Magnet) record() {
-	if /*!m.record ||*/ isnil(m.buffer) { return }
-	m.x = m.buffer.cursor.pos.x
-}
-/*
-fn (mut m Magnet) move_offrecord(amount int, movement Movement) {
-	if isnil(m.buffer) { return }
-	prev_recording_state := m.record
-	m.record = false
-	m.buffer.move_cursor(amount, movement)
-	m.record = prev_recording_state
-}*/
-
 /*
  * Selections
  */
@@ -558,7 +486,7 @@ pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
 			buffer: b
 		}
 	} else {
-		// TODO boounds check or map ??
+		// TODO bounds check or map ??
 		b.selections[index].from = from
 		b.selections[index].to = to
 	}
