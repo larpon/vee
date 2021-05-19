@@ -38,9 +38,9 @@ pub fn (mut v Vee) new_buffer() int {
 
 pub fn (mut v Vee) buffer_at(id int) &Buffer {
 	mut buf_idx := id
-	$if debug {
+	/*$if debug {
 		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' get buffer $id/${v.buffers.len}')
-	}
+	}*/
 	if v.buffers.len == 0 {
 		// Add default buffer
 		buf_idx = v.new_buffer()
@@ -120,9 +120,28 @@ pub fn (mut v Vee) put(input InputType) {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
 	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
-	mut cmd := &PutCmd{
+	b := v.active_buffer()
+	if input is string && input.str() == b.line_break {
+		mut cmd := &PutLineBreakCmd{
+			buffer: b
+		}
+		v.invoker.add(cmd)
+	} else {
+		mut cmd := &PutCmd{
+			buffer: b
+			input: input
+		}
+		v.invoker.add(cmd)
+	}
+	v.invoker.execute()
+}
+
+pub fn (mut v Vee) put_line_break() {
+	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
+	// NOTE that these aren't freed
+	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
+	mut cmd := &PutLineBreakCmd{
 		buffer: v.active_buffer()
-		input: input
 	}
 	v.invoker.add_and_execute(cmd)
 }
@@ -145,39 +164,49 @@ pub fn (mut v Vee) undo() bool {
 	}
 	mut cmd := v.invoker.undo() or { return false }
 
-	if cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-		cmd = v.invoker.peek(.undo) or { return true }
-		for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-			v.invoker.undo() or { return true }
+	match cmd {
+		MoveCursorCmd, MoveToWordCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
-		}
-	}
-
-	if cmd is PutCmd {
-		cmd = v.invoker.peek(.undo) or { return true }
-		for cmd is PutCmd {
-			if mut cmd is PutCmd {
-				str := cmd.input.str()
-				if str.contains('\n') {
-					return true
+			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' MoveXXXCmd streak')
 				}
+				v.invoker.undo() or { return true }
+				cmd = v.invoker.peek(.undo) or { return true }
 			}
-			v.invoker.undo() or { return true }
-			cmd = v.invoker.peek(.undo) or { return true }
 		}
-	}
-
-	if cmd is DelCmd {
-		cmd = v.invoker.peek(.undo) or { return true }
-		for cmd is DelCmd {
-			if mut cmd is DelCmd {
-				str := cmd.deleted.str()
-				if str.contains('\n') {
-					return true
-				}
-			}
-			v.invoker.undo() or { return true }
+		PutCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
+			for cmd is PutCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutCmd streak')
+				}
+				v.invoker.undo() or { return true }
+				cmd = v.invoker.peek(.undo) or { return true }
+			}
+		}
+		PutLineBreakCmd {
+			cmd = v.invoker.peek(.undo) or { return true }
+			for cmd is PutLineBreakCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutLineBreakCmd streak')
+				}
+				v.invoker.undo() or { return true }
+				cmd = v.invoker.peek(.undo) or { return true }
+			}
+		}
+		DelCmd {
+			cmd = v.invoker.peek(.undo) or { return true }
+			for cmd is DelCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' DelCmd streak')
+				}
+				v.invoker.undo() or { return true }
+				cmd = v.invoker.peek(.undo) or { return true }
+			}
+		}
+		else {
+			return true
 		}
 	}
 
@@ -189,43 +218,50 @@ pub fn (mut v Vee) redo() bool {
 		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
 	}
 	mut cmd := v.invoker.redo() or { return false }
-
-	if cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-		cmd = v.invoker.peek(.redo) or { return true }
-		for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-			v.invoker.redo() or { return true }
+	match cmd {
+		MoveCursorCmd, MoveToWordCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
-		}
-	}
-
-	if cmd is PutCmd {
-		cmd = v.invoker.peek(.redo) or { return true }
-		for cmd is PutCmd {
-			if mut cmd is PutCmd {
-				str := cmd.input.str()
-				if str.contains('\n') {
-					return true
+			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' MoveXXXCmd streak')
 				}
+				v.invoker.redo() or { return true }
+				cmd = v.invoker.peek(.redo) or { return true }
 			}
-			v.invoker.redo() or { return true }
-			cmd = v.invoker.peek(.redo) or { return true }
 		}
-	}
-
-	if cmd is DelCmd {
-		cmd = v.invoker.peek(.redo) or { return true }
-		for cmd is DelCmd {
-			if mut cmd is DelCmd {
-				str := cmd.deleted.str()
-				if str.contains('\n') {
-					return true
-				}
-			}
-			v.invoker.redo() or { return true }
+		PutCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
+			for cmd is PutCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutCmd streak')
+				}
+				v.invoker.redo() or { return true }
+				cmd = v.invoker.peek(.redo) or { return true }
+			}
+		}
+		PutLineBreakCmd {
+			cmd = v.invoker.peek(.redo) or { return true }
+			for cmd is PutLineBreakCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' PutLineBreakCmd streak')
+				}
+				v.invoker.redo() or { return true }
+				cmd = v.invoker.peek(.redo) or { return true }
+			}
+		}
+		DelCmd {
+			cmd = v.invoker.peek(.redo) or { return true }
+			for cmd is DelCmd {
+				$if debug {
+					eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' DelCmd streak')
+				}
+				v.invoker.redo() or { return true }
+				cmd = v.invoker.peek(.redo) or { return true }
+			}
+		}
+		else {
+			return true
 		}
 	}
 	return true
 }
-
-

@@ -19,9 +19,6 @@ fn (cmd PutCmd) str() string {
 }
 
 fn (mut cmd PutCmd) do() {
-	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
-	}
 	mut b := cmd.buffer
 	b.put(cmd.input)
 }
@@ -40,6 +37,37 @@ fn (mut cmd PutCmd) redo() {
 	}
 	mut b := cmd.buffer
 	b.put(cmd.input)
+}
+
+//
+struct PutLineBreakCmd {
+mut:
+	buffer &Buffer
+}
+
+fn (cmd PutLineBreakCmd) str() string {
+	return @STRUCT+' {
+	buffer: ${ptr_str(cmd.buffer)}
+}'
+}
+
+fn (mut cmd PutLineBreakCmd) do() {
+	cmd.buffer.put_line_break()
+}
+
+fn (mut cmd PutLineBreakCmd) undo() {
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+	}
+	mut b := cmd.buffer
+	b.del(-1)
+}
+
+fn (mut cmd PutLineBreakCmd) redo() {
+	$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
+	}
+	cmd.buffer.put_line_break()
 }
 
 //

@@ -32,25 +32,22 @@ pub fn (mut i Invoker) add(cmd ICommand) {
 
 pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 	$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'('+typeof(queue_type).name+')')
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+'('+queue_type.str()+')')
 	}
 	match queue_type {
 		.command {
 			if i.queue.len > 0 {
-				cmd := i.queue.last()
-				return cmd
+				return i.queue.last()
 			}
 		}
 		.undo {
 			if i.undo_stack.len > 0 {
-				cmd := i.undo_stack.last()
-				return cmd
+				return i.undo_stack.last()
 			}
 		}
 		.redo {
 			if i.redo_stack.len > 0 {
-				cmd := i.redo_stack.last()
-				return cmd
+				return i.redo_stack.last()
 			}
 		}
 	}

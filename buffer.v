@@ -143,6 +143,10 @@ pub fn (b Buffer) cursor_index() int {
 
 pub fn (mut b Buffer) put(ipt InputType) {
 	s := ipt.str()
+	$if debug {
+		flat_s := b.flatten(s)
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "$flat_s"')
+	}
 	has_line_ending := s.contains(b.line_break)
 	x, y := b.cursor.xy()
 	if b.lines.len == 0 { b.lines.prepend('') }
@@ -165,6 +169,27 @@ pub fn (mut b Buffer) put(ipt InputType) {
 		b.cursor.set(x + s.len, y)
 	}
 	b.magnet.record()
+	/*$if debug {
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
+	}*/
+}
+
+pub fn (mut b Buffer) put_line_break() {
+	b.put(b.line_break)
+	/*x, y := b.cursor.xy()
+	if b.lines.len == 0 { b.lines.prepend('') }
+	line := b.lines[y]
+	l := line[..x]
+	r := line[x..]
+	mut lines := ['']
+	lines[0] = l + lines[0]
+	lines[lines.len - 1] += r
+	b.lines.delete(y)
+	b.lines.insert(y, lines)
+	last := lines[lines.len - 1]
+	b.cursor.set(last.len, y + lines.len - 1)
+	b.cursor.set(0,b.cursor.pos.y)
+	b.magnet.record()*/
 	$if debug {
 		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
 	}
@@ -179,14 +204,38 @@ pub fn (mut b Buffer) del(amount int) string {
 		if x >= b.cur_line().len && y >= b.lines.len-1 { return '' }
 	}
 	mut removed := ''
-	//line := b.lines[y]
 	if amount < 0 { // backspace (backward)
 		i := b.cursor_index()
+
+		/*
+		raw_buffer := b.raw()
+		mut from_i := i+amount
+		mut to_i := i
+
+		if from_i < 0 {
+			from_i = 0
+		}
+		println(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}" (${b.cursor.pos.x},${b.cursor.pos.y}/$i) $amount')
+		removed = raw_buffer[from_i..to_i]
+		*/
+
 		removed = b.raw()[i+amount..i]
 		mut left := amount * -1
+
+		//println(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}" (${b.cursor.pos.x},${b.cursor.pos.y}/$i) $amount')
+
 		for li := y; li >= 0 && left > 0; li-- {
 			ln := b.lines[li]
-			if left > ln.len {
+			//println(@MOD+'.'+@STRUCT+'::'+@FN+' left: $left, line length: $ln.len')
+			if left == ln.len+1 { // All of the line + 1 - since we're going backwards the "+1" is the line break delimiter.
+				b.lines.delete(li)
+				left = 0
+				if y == 0 { return '' }
+				line_above := b.lines[li-1]
+				b.cursor.pos.x = line_above.len
+				b.cursor.pos.y--
+				break
+			} else if left > ln.len {
 				b.lines.delete(li)
 				if ln.len == 0 { // line break delimiter
 					left--
@@ -224,7 +273,15 @@ pub fn (mut b Buffer) del(amount int) string {
 		}
 	} else { // delete (forward)
 		i := b.cursor_index()+1
-		removed = b.raw()[i-amount..i]
+		raw_buffer := b.raw()
+		from_i := i
+		mut to_i := i+amount
+
+		if to_i > raw_buffer.len {
+			to_i = raw_buffer.len
+		}
+		removed = raw_buffer[from_i..to_i]
+
 		mut left := amount
 		for li := y; li >= 0 && left > 0; li++ {
 			ln := b.lines[li]
@@ -245,8 +302,12 @@ pub fn (mut b Buffer) del(amount int) string {
 		}
 	}
 	b.magnet.record()
-	$if debug {
+	/*$if debug {
 		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
+	}*/
+	$if debug {
+		flat_removed := b.flatten(removed)
+		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"-"$flat_removed"')
 	}
 	return removed
 }
