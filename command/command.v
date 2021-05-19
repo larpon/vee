@@ -16,7 +16,7 @@ interface ICommand {
 
 struct Invoker {
 mut:
-	queue []ICommand
+	command_queue []ICommand
 	undo_stack []ICommand
 	redo_stack []ICommand
 }
@@ -27,7 +27,7 @@ pub fn (mut i Invoker) add_and_execute(cmd ICommand) {
 }
 
 pub fn (mut i Invoker) add(cmd ICommand) {
-	i.queue << cmd
+	i.command_queue << cmd
 }
 
 pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
@@ -36,8 +36,8 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 	}
 	match queue_type {
 		.execute {
-			if i.queue.len > 0 {
-				return i.queue.last()
+			if i.command_queue.len > 0 {
+				return i.command_queue.last()
 			}
 		}
 		.undo {
@@ -56,12 +56,12 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 }
 
 pub fn (mut i Invoker) execute() bool {
-	if i.queue.len > 0 {
+	if i.command_queue.len > 0 {
 		$if debug {
 			eprintln(@MOD+'.'+@STRUCT+'::'+@FN)
 		}
 		i.redo_stack.clear()
-		cmd := i.queue.pop()
+		cmd := i.command_queue.pop()
 		cmd.do()
 		i.undo_stack << cmd
 		return true
