@@ -149,7 +149,7 @@ fn literal(s string) string {
 
 fn init(x voidptr) {
 	mut a := &App(x)
-	a.ed = vee.new({})
+	a.ed = vee.new(vee.VeeConfig{})
 	mut init_x := 0
 	mut init_y := 0
 	if a.file.len > 0 {
@@ -187,7 +187,7 @@ fn frame(x voidptr) {
 	} else if buf.cursor.pos.y < a.viewport { // scroll up
 		a.viewport = buf.cursor.pos.y
 	}
-	view := buf.view(a.viewport, scroll_limit + a.viewport)
+	view := a.ed.view(a.viewport, scroll_limit + a.viewport)
 
 	a.tui.draw_text(0, 0, view.raw)
 	a.footer()
@@ -210,6 +210,7 @@ fn fail(error string) {
 
 fn event(e &ui.Event, x voidptr) {
 	mut a := &App(x)
+	eprintln(e)
 	if e.typ == .key_down {
 		match e.code {
 			.escape {

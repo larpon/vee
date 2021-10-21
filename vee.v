@@ -2,6 +2,7 @@
 // Use of this source code is governed by the MIT license distributed with this software.
 module vee
 
+import strings
 import vee.command
 
 [heap]
@@ -12,12 +13,60 @@ mut:
 	invoker          command.Invoker
 }
 
+struct View {
+pub:
+	raw    string
+	cursor Cursor
+}
+
 pub struct VeeConfig {
 }
 
 pub fn new(config VeeConfig) &Vee {
 	ed := &Vee{}
 	return ed
+}
+
+pub fn (mut v Vee) view(from int, to int) View {
+	mut b := v.active_buffer()
+
+	b.magnet.activate()
+
+	slice := b.cur_slice()
+	mut tabs := 0
+	mut vx := 0
+	for i := 0; i < slice.len; i++ {
+		if slice[i] == `\t` {
+			vx += b.tab_width
+			tabs++
+			continue
+		}
+		vx++
+	}
+	x := vx
+
+	/*
+	if tabs > 0 && x > b.magnet.x {
+		x = b.magnet.x
+		b.cursor.pos.x = x
+	}*/
+
+	mut lines := []string{}
+	for i, line in b.lines {
+		if i >= from && i <= to {
+			lines << line
+		}
+	}
+	raw := lines.join(b.line_break)
+	return View{
+		raw: raw.replace('\t', strings.repeat(` `, b.tab_width))
+		cursor: Cursor{
+			pos: Position{
+				x: x
+				y: b.cursor.pos.y
+			}
+		}
+	}
 }
 
 pub fn (mut v Vee) free() {
@@ -81,7 +130,8 @@ pub fn (mut v Vee) add_buffer(b &Buffer) int {
 * Cursor movement
 */
 pub fn (mut v Vee) cursor_to(pos Position) {
-	v.active_buffer().cursor_to(pos.x, pos.y)
+	mut b := v.active_buffer()
+	b.cursor_to(pos.x, pos.y)
 }
 
 // move_cursor will navigate the cursor within the buffer bounds

@@ -3,7 +3,7 @@ module main
 import vee
 
 fn test_basics() {
-	mut ed := vee.new({})
+	mut ed := vee.new(vee.VeeConfig{})
 	mut buf := ed.active_buffer()
 
 	ed.put('Hello World')

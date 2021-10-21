@@ -9,6 +9,7 @@ pub enum QueueType {
 }
 
 interface ICommand {
+mut:
 	do()
 	undo()
 	redo()
@@ -61,7 +62,7 @@ pub fn (mut i Invoker) execute() bool {
 			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
 		i.redo_stack.clear()
-		cmd := i.command_queue.pop()
+		mut cmd := i.command_queue.pop()
 		cmd.do()
 		i.undo_stack << cmd
 		return true
@@ -74,7 +75,7 @@ pub fn (mut i Invoker) undo() ?ICommand {
 		$if debug {
 			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
-		cmd := i.undo_stack.pop()
+		mut cmd := i.undo_stack.pop()
 		cmd.undo()
 		i.redo_stack << cmd
 		return cmd
@@ -87,7 +88,7 @@ pub fn (mut i Invoker) redo() ?ICommand {
 		$if debug {
 			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
 		}
-		cmd := i.redo_stack.pop()
+		mut cmd := i.redo_stack.pop()
 		cmd.redo()
 		i.undo_stack << cmd
 		return cmd

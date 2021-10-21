@@ -2,18 +2,10 @@
 // Use of this source code is governed by the MIT license distributed with this software.
 module vee
 
-import strings
-
 struct Position {
 pub mut:
 	x int
 	y int
-}
-
-struct View {
-pub:
-	raw    string
-	cursor Cursor
 }
 
 struct Selection {
@@ -66,48 +58,6 @@ pub fn (b Buffer) flat() string {
 
 pub fn (b Buffer) raw() string {
 	return b.lines.join(b.line_break)
-}
-
-pub fn (mut b Buffer) view(from int, to int) View {
-	// pos := b.cursor.pos
-
-	b.magnet.activate()
-
-	slice := b.cur_slice()
-	mut tabs := 0
-	mut vx := 0
-	for i := 0; i < slice.len; i++ {
-		if slice[i] == `\t` {
-			vx += b.tab_width
-			tabs++
-			continue
-		}
-		vx++
-	}
-	x := vx
-
-	/*
-	if tabs > 0 && x > b.magnet.x {
-		x = b.magnet.x
-		b.cursor.pos.x = x
-	}*/
-
-	mut lines := []string{}
-	for i, line in b.lines {
-		if i >= from && i <= to {
-			lines << line
-		}
-	}
-	raw := lines.join(b.line_break)
-	return View{
-		raw: raw.replace('\t', strings.repeat(` `, b.tab_width))
-		cursor: {
-			pos: Position{
-				x: x
-				y: b.cursor.pos.y
-			}
-		}
-	}
 }
 
 pub fn (b Buffer) eol() bool {
@@ -204,21 +154,6 @@ pub fn (mut b Buffer) put(ipt InputType) {
 
 pub fn (mut b Buffer) put_line_break() {
 	b.put(b.line_break)
-	/*
-	x, y := b.cursor.xy()
-	if b.lines.len == 0 { b.lines.prepend('') }
-	line := b.lines[y]
-	l := line[..x]
-	r := line[x..]
-	mut lines := ['']
-	lines[0] = l + lines[0]
-	lines[lines.len - 1] += r
-	b.lines.delete(y)
-	b.lines.insert(y, lines)
-	last := lines[lines.len - 1]
-	b.cursor.set(last.len, y + lines.len - 1)
-	b.cursor.set(0,b.cursor.pos.y)
-	b.magnet.record()*/
 	$if debug {
 		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
 	}
@@ -241,19 +176,6 @@ pub fn (mut b Buffer) del(amount int) string {
 	mut removed := ''
 	if amount < 0 { // backspace (backward)
 		i := b.cursor_index()
-
-		/*
-		raw_buffer := b.raw()
-		mut from_i := i+amount
-		mut to_i := i
-
-		if from_i < 0 {
-			from_i = 0
-		}
-		println(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}" (${b.cursor.pos.x},${b.cursor.pos.y}/$i) $amount')
-		removed = raw_buffer[from_i..to_i]
-		*/
-
 		removed = b.raw()[i + amount..i]
 		mut left := amount * -1
 
@@ -518,7 +440,7 @@ pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
 	}
 }
 
-pub fn (b Buffer) selection(index int) Selection {
-	// TODO boounds check or map ??
+pub fn (b Buffer) selection_at(index int) Selection {
+	// TODO bounds check or map ??
 	return b.selections[index]
 }
