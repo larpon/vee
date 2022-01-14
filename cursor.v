@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Lars Pontoppidan. All rights reserved.
+// Copyright (c) 2020-2022 Lars Pontoppidan. All rights reserved.
 // Use of this source code is governed by the MIT license distributed with this software.
 module vee
 
