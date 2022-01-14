@@ -1,0 +1,56 @@
+name: Code CI
+
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+
+concurrency:
+  group: code-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  v-compiles-vee-examples:
+    runs-on: ubuntu-18.04
+    timeout-minutes: 30
+    env:
+      VFLAGS: -cc tcc -no-retry-compilation
+    steps:
+      - name: Checkout V
+        uses: actions/checkout@v2
+        with:
+          repository: vlang/v
+      - name: Build local v
+        run: make && sudo ./v symlink
+
+      - name: Checkout vee
+        uses: actions/checkout@v2
+        with:
+          path: vee
+
+      - name: Link local SDL folder in ~/.vmodules/vee
+        run: |
+          cd vee
+          mkdir -p ~/.vmodules
+          ln -s $(pwd) ~/.vmodules/vee
+
+      - name: Test code formatting
+        run: |
+          cd vee
+          v test-fmt
+
+      - name: Build vee shared
+        run: v -shared -g vee
+
+      - name: Run tests
+        run: v test vee
+
+      - name: Build vee examples
+        run: |
+          for example in vee/examples/*; do
+              echo "v $example"
+              v "$example";
+          done
