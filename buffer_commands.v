@@ -24,17 +24,15 @@ fn (mut cmd PutCmd) do() {
 }
 
 fn (mut cmd PutCmd) undo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.del(-cmd.input.len())
 }
 
 fn (mut cmd PutCmd) redo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.put(cmd.input)
 }
@@ -56,17 +54,15 @@ fn (mut cmd PutLineBreakCmd) do() {
 }
 
 fn (mut cmd PutLineBreakCmd) undo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.del(-1)
 }
 
 fn (mut cmd PutLineBreakCmd) redo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	cmd.buffer.put_line_break()
 }
 
@@ -90,18 +86,16 @@ fn (cmd DelCmd) str() string {
 }
 
 fn (mut cmd DelCmd) do() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	cmd.pos = b.cursor.pos
 	cmd.deleted = b.del(cmd.amount)
 }
 
 fn (mut cmd DelCmd) undo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	if cmd.amount < 0 {
 		b.put(cmd.deleted)
@@ -113,9 +107,8 @@ fn (mut cmd DelCmd) undo() {
 }
 
 fn (mut cmd DelCmd) redo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	if cmd.amount < 0 {
 		b.del(cmd.amount)
@@ -143,9 +136,8 @@ fn (cmd MoveCursorCmd) str() string {
 }
 
 fn (mut cmd MoveCursorCmd) do() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	cmd.from_pos = b.cursor.pos
 	b.move_cursor(cmd.amount, cmd.movement)
@@ -153,17 +145,15 @@ fn (mut cmd MoveCursorCmd) do() {
 }
 
 fn (mut cmd MoveCursorCmd) undo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.cursor_to(cmd.from_pos.x, cmd.from_pos.y)
 }
 
 fn (mut cmd MoveCursorCmd) redo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.cursor_to(cmd.to_pos.x, cmd.to_pos.y)
 }
@@ -187,9 +177,8 @@ fn (cmd MoveToWordCmd) str() string {
 }
 
 fn (mut cmd MoveToWordCmd) do() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	cmd.from_pos = b.cursor.pos
 	b.move_to_word(cmd.movement)
@@ -197,17 +186,15 @@ fn (mut cmd MoveToWordCmd) do() {
 }
 
 fn (mut cmd MoveToWordCmd) undo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.cursor_to(cmd.from_pos.x, cmd.from_pos.y)
 }
 
 fn (mut cmd MoveToWordCmd) redo() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut b := cmd.buffer
 	b.cursor_to(cmd.to_pos.x, cmd.to_pos.y)
 }

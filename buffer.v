@@ -119,10 +119,8 @@ pub fn (b Buffer) cursor_index() int {
 
 pub fn (mut b Buffer) put(ipt InputType) {
 	s := ipt.str()
-	$if debug {
-		flat_s := b.flatten(s)
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$flat_s"')
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "${b.flatten(s)}"')
+
 	has_line_ending := s.contains(b.line_break)
 	x, y := b.cursor.xy()
 	if b.lines.len == 0 {
@@ -147,16 +145,12 @@ pub fn (mut b Buffer) put(ipt InputType) {
 		b.cursor.set(x + s.len, y)
 	}
 	b.magnet.record()
-	/*$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
-	}*/
+	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
 }
 
 pub fn (mut b Buffer) put_line_break() {
 	b.put(b.line_break)
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
 }
 
 pub fn (mut b Buffer) del(amount int) string {
@@ -265,13 +259,10 @@ pub fn (mut b Buffer) del(amount int) string {
 		}
 	}
 	b.magnet.record()
-	/*$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
-	}*/
-	$if debug {
-		flat_removed := b.flatten(removed)
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"-"$flat_removed"')
-	}
+	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
+
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"-"${b.flatten(removed)}"')
+
 	return removed
 }
 
@@ -281,9 +272,8 @@ fn (b Buffer) dmp() {
 
 // free frees all buffer memory
 fn (mut b Buffer) free() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	unsafe {
 		for line in b.lines {
 			line.free()

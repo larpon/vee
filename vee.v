@@ -70,9 +70,7 @@ pub fn (mut v Vee) view(from int, to int) View {
 }
 
 pub fn (mut v Vee) free() {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
 	unsafe {
 		for b in v.buffers {
 			b.free()
@@ -89,21 +87,14 @@ pub fn (mut v Vee) new_buffer() int {
 
 pub fn (mut v Vee) buffer_at(id int) &Buffer {
 	mut buf_idx := id
-	/*$if debug {
-		eprintln(@MOD+'.'+@STRUCT+'::'+@FN+' get buffer $id/${v.buffers.len}')
-	}*/
+	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' get buffer $id/${v.buffers.len}')
 	if v.buffers.len == 0 {
 		// Add default buffer
 		buf_idx = v.new_buffer()
-		$if debug {
-			eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' added initial buffer')
-		}
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' added initial buffer')
 	}
 	if buf_idx < 0 || buf_idx >= v.buffers.len {
-		$if debug {
-			eprintln(@MOD + '.' + @STRUCT + '::' + @FN +
-				' invalid index "$buf_idx". Returning active')
-		}
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' invalid index "$buf_idx". Returning active')
 		// TODO also check that the active index can be reached
 		buf_idx = v.active_buffer_id
 	}
@@ -206,18 +197,16 @@ pub fn (mut v Vee) del(amount int) {
 
 //
 pub fn (mut v Vee) undo() bool {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut cmd := v.invoker.undo() or { return false }
 
 	match cmd {
 		MoveCursorCmd, MoveToWordCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
+
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
 			}
@@ -225,9 +214,8 @@ pub fn (mut v Vee) undo() bool {
 		PutCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is PutCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
+
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
 			}
@@ -235,9 +223,8 @@ pub fn (mut v Vee) undo() bool {
 		PutLineBreakCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is PutLineBreakCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
+
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
 			}
@@ -245,9 +232,8 @@ pub fn (mut v Vee) undo() bool {
 		DelCmd {
 			cmd = v.invoker.peek(.undo) or { return true }
 			for cmd is DelCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
+
 				v.invoker.undo() or { return true }
 				cmd = v.invoker.peek(.undo) or { return true }
 			}
@@ -261,17 +247,15 @@ pub fn (mut v Vee) undo() bool {
 }
 
 pub fn (mut v Vee) redo() bool {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 	mut cmd := v.invoker.redo() or { return false }
 	match cmd {
 		MoveCursorCmd, MoveToWordCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is MoveCursorCmd || cmd is MoveToWordCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' MoveXXXCmd streak')
+
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
 			}
@@ -279,9 +263,8 @@ pub fn (mut v Vee) redo() bool {
 		PutCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is PutCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' PutCmd streak')
+
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
 			}
@@ -289,9 +272,8 @@ pub fn (mut v Vee) redo() bool {
 		PutLineBreakCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is PutLineBreakCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' PutLineBreakCmd streak')
+
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
 			}
@@ -299,9 +281,8 @@ pub fn (mut v Vee) redo() bool {
 		DelCmd {
 			cmd = v.invoker.peek(.redo) or { return true }
 			for cmd is DelCmd {
-				$if debug {
-					eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
-				}
+				dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' DelCmd streak')
+
 				v.invoker.redo() or { return true }
 				cmd = v.invoker.peek(.redo) or { return true }
 			}

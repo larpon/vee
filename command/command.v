@@ -32,9 +32,8 @@ pub fn (mut i Invoker) add(cmd ICommand) {
 }
 
 pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
-	$if debug {
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + '(' + queue_type.str() + ')')
-	}
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + '(' + queue_type.str() + ')')
+
 	match queue_type {
 		.execute {
 			if i.command_queue.len > 0 {
@@ -58,9 +57,8 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 
 pub fn (mut i Invoker) execute() bool {
 	if i.command_queue.len > 0 {
-		$if debug {
-			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-		}
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 		i.redo_stack.clear()
 		mut cmd := i.command_queue.pop()
 		cmd.do()
@@ -72,9 +70,8 @@ pub fn (mut i Invoker) execute() bool {
 
 pub fn (mut i Invoker) undo() ?ICommand {
 	if i.undo_stack.len > 0 {
-		$if debug {
-			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-		}
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 		mut cmd := i.undo_stack.pop()
 		cmd.undo()
 		i.redo_stack << cmd
@@ -85,13 +82,17 @@ pub fn (mut i Invoker) undo() ?ICommand {
 
 pub fn (mut i Invoker) redo() ?ICommand {
 	if i.redo_stack.len > 0 {
-		$if debug {
-			eprintln(@MOD + '.' + @STRUCT + '::' + @FN)
-		}
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
+
 		mut cmd := i.redo_stack.pop()
 		cmd.redo()
 		i.undo_stack << cmd
 		return cmd
 	}
 	return none
+}
+
+[if vee_debug ?]
+fn dbg(str string) {
+	eprintln(str)
 }
