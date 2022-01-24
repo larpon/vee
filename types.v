@@ -33,8 +33,11 @@ fn (ipt InputType) len() int {
 
 fn (ipt InputType) str() string {
 	match ipt {
-		byte, rune {
-			return ipt.str()
+		byte {
+			return ipt.ascii_str()
+		}
+		rune {
+			return [ipt].string()
 		}
 		string {
 			return ipt.str()
