@@ -4,7 +4,7 @@ module vee
 
 import encoding.utf8
 
-const rune_digits = [rune(`0`), `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
+const rune_digits = [`0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`]
 
 struct Position {
 pub mut:
@@ -134,15 +134,14 @@ pub fn (mut b Buffer) put(ipt InputType) {
 		b.lines.prepend('')
 	}
 	line := b.lines[y].runes()
-	l := line[..x].string()
-	r := line[x..].string()
+	l, r := line[..x].string(), line[x..].string()
 	if has_line_ending {
 		mut lines := s.split(b.line_break)
 		lines[0] = l + lines[0]
 		lines[lines.len - 1] += r
 		b.lines.delete(y)
 		b.lines.insert(y, lines)
-		last := lines[lines.len - 1]
+		last := lines[lines.len - 1].runes()
 		b.cursor.set(last.len, y + lines.len - 1)
 		if s == b.line_break {
 			b.cursor.set(0, b.cursor.pos.y)
@@ -169,10 +168,8 @@ pub fn (mut b Buffer) del(amount int) string {
 		if x == 0 && y == 0 {
 			return ''
 		}
-	} else {
-		if x >= b.cur_line().runes().len && y >= b.lines.len - 1 {
-			return ''
-		}
+	} else if x >= b.cur_line().runes().len && y >= b.lines.len - 1 {
+		return ''
 	}
 	mut removed := ''
 	if amount < 0 { // backspace (backward)
