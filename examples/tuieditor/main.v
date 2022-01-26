@@ -4,6 +4,118 @@ import os
 import term
 import term.ui
 import vee
+import encoding.utf8
+import encoding.utf8.east_asian
+
+const (
+	space_unicode     = [
+		`\u0009`, // U+0009 CHARACTER TABULATION
+		`\u0020`, // U+0020 SPACE
+		`\u00ad`, // U+00AD SOFT HYPHEN
+		`\u115f`, // U+115F HANGUL CHOSEONG FILLER
+		`\u1160`, // U+1160 HANGUL JUNGSEONG FILLER
+		`\u2000`, // U+2000 EN QUAD
+		`\u2001`, // U+2001 EM QUAD
+		`\u2002`, // U+2002 EN SPACE
+		`\u2003`, // U+2003 EM SPACE
+		`\u2004`, // U+2004 THREE-PER-EM SPACE
+		`\u2005`, // U+2005 FOUR-PER-EM SPACE
+		`\u2006`, // U+2006 SIX-PER-EM SPACE
+		`\u2007`, // U+2007 FIGURE SPACE
+		`\u2008`, // U+2008 PUNCTUATION SPACE
+		`\u2009`, // U+2009 THIN SPACE
+		//`\u200a`, // U+200A HAIR SPACE
+		`\u202f`, // U+202F NARROW NO-BREAK SPACE
+		`\u205f`, // U+205F MEDIUM MATHEMATICAL SPACE
+		`\u3000`, // U+3000 IDEOGRAPHIC SPACE
+		`\u2800`, // U+2800 BRAILLE PATTERN BLANK
+		`\u3164`, // U+3164 HANGUL FILLER
+		`\uffa0`, // U+FFA0 HALFWIDTH HANGUL FILLER
+	]
+
+	no_space_unicode  = [
+		`\u034f`, // U+034F COMBINING GRAPHEME JOINER
+		`\u061c`, // U+061C ARABIC LETTER MARK
+		`\u17b4`, // U+17B4 KHMER VOWEL INHERENT AQ
+		`\u17b5`, // U+17B5 KHMER VOWEL INHERENT AA
+		`\u200a`, // U+200A HAIR SPACE
+		`\u200b`, // U+200B ZERO WIDTH SPACE
+		`\u200c`, // U+200C ZERO WIDTH NON-JOINER
+		`\u200d`, // U+200D ZERO WIDTH JOINER
+		`\u200e`, // U+200E LEFT-TO-RIGHT MARK
+		`\u200f`, // U+200F RIGHT-TO-LEFT MARK
+		`\u2060`, // U+2060 WORD JOINER
+		`\u2061`, // U+2061 FUNCTION APPLICATION
+		`\u2062`, // U+2062 INVISIBLE TIMES
+		`\u2063`, // U+2063 INVISIBLE SEPARATOR
+		`\u2064`, // U+2064 INVISIBLE PLUS
+		`\u206a`, // U+206A INHIBIT SYMMETRIC SWAPPING
+		`\u206b`, // U+206B ACTIVATE SYMMETRIC SWAPPING
+		`\u206c`, // U+206C INHIBIT ARABIC FORM SHAPING
+		`\u206d`, // U+206D ACTIVATE ARABIC FORM SHAPING
+		`\u206e`, // U+206E NATIONAL DIGIT SHAPES
+		`\u206f`, // U+206F NOMINAL DIGIT SHAPES
+		`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
+	]
+
+	invisible_unicode = [
+		`\u0009`, // U+0009 CHARACTER TABULATION
+		`\u0020`, // U+0020 SPACE
+		`\u00ad`, // U+00AD SOFT HYPHEN
+		`\u034f`, // U+034F COMBINING GRAPHEME JOINER
+		`\u061c`, // U+061C ARABIC LETTER MARK
+		`\u115f`, // U+115F HANGUL CHOSEONG FILLER
+		`\u1160`, // U+1160 HANGUL JUNGSEONG FILLER
+		`\u17b4`, // U+17B4 KHMER VOWEL INHERENT AQ
+		`\u17b5`, // U+17B5 KHMER VOWEL INHERENT AA
+		`\u180e`, // U+180E MONGOLIAN VOWEL SEPARATOR
+		`\u2000`, // U+2000 EN QUAD
+		`\u2001`, // U+2001 EM QUAD
+		`\u2002`, // U+2002 EN SPACE
+		`\u2003`, // U+2003 EM SPACE
+		`\u2004`, // U+2004 THREE-PER-EM SPACE
+		`\u2005`, // U+2005 FOUR-PER-EM SPACE
+		`\u2006`, // U+2006 SIX-PER-EM SPACE
+		`\u2007`, // U+2007 FIGURE SPACE
+		`\u2008`, // U+2008 PUNCTUATION SPACE
+		`\u2009`, // U+2009 THIN SPACE
+		`\u200a`, // U+200A HAIR SPACE
+		`\u200b`, // U+200B ZERO WIDTH SPACE
+		`\u200c`, // U+200C ZERO WIDTH NON-JOINER
+		`\u200d`, // U+200D ZERO WIDTH JOINER
+		`\u200e`, // U+200E LEFT-TO-RIGHT MARK
+		`\u200f`, // U+200F RIGHT-TO-LEFT MARK
+		`\u202f`, // U+202F NARROW NO-BREAK SPACE
+		`\u205f`, // U+205F MEDIUM MATHEMATICAL SPACE
+		`\u2060`, // U+2060 WORD JOINER
+		`\u2061`, // U+2061 FUNCTION APPLICATION
+		`\u2062`, // U+2062 INVISIBLE TIMES
+		`\u2063`, // U+2063 INVISIBLE SEPARATOR
+		`\u2064`, // U+2064 INVISIBLE PLUS
+		`\u206a`, // U+206A INHIBIT SYMMETRIC SWAPPING
+		`\u206b`, // U+206B ACTIVATE SYMMETRIC SWAPPING
+		`\u206c`, // U+206C INHIBIT ARABIC FORM SHAPING
+		`\u206d`, // U+206D ACTIVATE ARABIC FORM SHAPING
+		`\u206e`, // U+206E NATIONAL DIGIT SHAPES
+		`\u206f`, // U+206F NOMINAL DIGIT SHAPES
+		`\u3000`, // U+3000 IDEOGRAPHIC SPACE
+		`\u2800`, // U+2800 BRAILLE PATTERN BLANK
+		`\u3164`, // U+3164 HANGUL FILLER
+		`\ufeff`, // U+FEFF ZERO WIDTH NO-BREAK SPACE
+		`\uffa0`, // U+FFA0 HALFWIDTH HANGUL FILLER
+		/*
+		`\u1d159`, // U+1D159 MUSICAL SYMBOL NULL NOTEHEAD
+		`\u1d173`, // U+1D173 MUSICAL SYMBOL BEGIN BEAM
+		`\u1d174`, // U+1D174 MUSICAL SYMBOL END BEAM
+		`\u1d175`, // U+1D175 MUSICAL SYMBOL BEGIN TIE
+		`\u1d176`, // U+1D176 MUSICAL SYMBOL END TIE
+		`\u1d177`, // U+1D177 MUSICAL SYMBOL BEGIN SLUR
+		`\u1d178`, // U+1D178 MUSICAL SYMBOL END SLUR
+		`\u1d179`, // U+1D179 MUSICAL SYMBOL BEGIN PHRASE
+		`\u1d17a`, // U+1D17A MUSICAL SYMBOL END PHRASE
+		*/
+	]
+)
 
 struct App {
 mut:
@@ -106,18 +218,23 @@ fn (mut a App) dbg_overlay() {
 	// term.set_cursor_position({x: w050, y: 0})
 	mut b := a.ed.active_buffer()
 
-	cur_line := b.cur_line_flat()
-	line_snippet := if cur_line.len > w050 - 30 { cur_line[..w050 - 30] } else { cur_line }
-
+	cur_line := b.cur_line_flat().runes()
+	line_snippet := if cur_line.len > w050 - 30 { cur_line[..w050 - 30 - 1] } else { cur_line }.string()
 	// buffer_flat := b.flat()
 	// buffer_snippet := if flat.len > w050-30 { flat[..w050-30] } else { flat }
 
 	text := 'PID $os.getpid()
-Char  "${literal(b.cur_char())}"
-Slice "${literal(b.cur_slice())}"
-Line  "$line_snippet"
-EOL $b.eol()
-EOF $b.eof()
+Char bytes    "$b.cur_char().bytes()"
+PrevChar "${literal(b.prev_char())}/${east_asian.display_width(b.prev_char(),
+		1)}"
+Char     "${literal(b.cur_char())}/${east_asian.display_width(b.cur_char(),
+		1)}"
+Slice    "${literal(b.cur_slice())} $b.cur_slice().len/$b.cur_slice().runes().len/${east_asian.display_width(b.cur_slice(),
+		1)}"
+Line     "$line_snippet  $line_snippet.len/$line_snippet.runes().len/${east_asian.display_width(line_snippet,
+		1)}"
+EOL      $b.eol()
+EOF      $b.eof()
 Buffer lines $b.lines.len
 ${flatten(b.cursor.str())}
 ${flatten(b.magnet.str())}
@@ -192,7 +309,17 @@ fn frame(x voidptr) {
 	a.tui.draw_text(0, 0, view.raw)
 	a.footer()
 	a.dbg_overlay()
-	a.tui.set_cursor_position(view.cursor.pos.x + 1, buf.cursor.pos.y + 1 - a.viewport)
+
+	mut ch_x := view.cursor.pos.x
+
+	mut sl := buf.cur_slice().replace('\t', ' '.repeat(buf.tab_width))
+	if sl.len > 0 {
+		sl = sl.runes().filter(it !in no_space_unicode).string()
+		ch_x = east_asian.display_width(sl, 1)
+	}
+	ch_x++
+
+	a.tui.set_cursor_position(ch_x, buf.cursor.pos.y + 1 - a.viewport)
 	a.tui.flush()
 }
 
@@ -278,7 +405,7 @@ fn event(e &ui.Event, x voidptr) {
 				}
 			}
 			else {
-				a.ed.put(e.utf8.bytes().bytestr())
+				a.ed.put(e.utf8)
 			}
 		}
 	} else if e.typ == .mouse_scroll {

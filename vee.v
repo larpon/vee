@@ -32,7 +32,7 @@ pub fn (mut v Vee) view(from int, to int) View {
 
 	b.magnet.activate()
 
-	slice := b.cur_slice()
+	slice := b.cur_slice().runes()
 	mut tabs := 0
 	mut vx := 0
 	for i := 0; i < slice.len; i++ {

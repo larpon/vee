@@ -22,7 +22,8 @@ mut:
 [heap]
 struct Buffer {
 	line_break string = '\n'
-	tab_width  int    = 4
+pub:
+	tab_width int = 4
 mut:
 	mode       Mode = .edit
 	selections []Selection
@@ -79,6 +80,33 @@ pub fn (b Buffer) cur_char() string {
 	x, y := b.cursor.xy()
 	line := b.line(y).runes()
 	if x >= line.len {
+		return ''
+	}
+	// TODO check if this is needed
+	return [line[x]].string()
+}
+
+pub fn (b Buffer) cur_rune() rune {
+	c := b.cur_char().runes()
+	if c.len > 0 {
+		return c[0]
+	}
+	return rune(0)
+}
+
+pub fn (b Buffer) prev_rune() rune {
+	c := b.prev_char().runes()
+	if c.len > 0 {
+		return c[0]
+	}
+	return rune(0)
+}
+
+pub fn (b Buffer) prev_char() string {
+	mut x, y := b.cursor.xy()
+	x--
+	line := b.line(y).runes()
+	if x >= line.len || x < 0 {
 		return ''
 	}
 	// TODO check if this is needed
