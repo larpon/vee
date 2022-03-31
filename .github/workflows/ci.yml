@@ -19,12 +19,10 @@ jobs:
     env:
       VFLAGS: -cc tcc -no-retry-compilation
     steps:
-      - name: Checkout V
-        uses: actions/checkout@v2
+      - name: Install V
+        uses: vlang/setup-v@v1
         with:
-          repository: vlang/v
-      - name: Build local v
-        run: make && sudo ./v symlink
+          check-latest: true
 
       - name: Checkout vee
         uses: actions/checkout@v2
@@ -50,7 +48,4 @@ jobs:
 
       - name: Build vee examples
         run: |
-          for example in vee/examples/*; do
-              echo "v $example"
-              v "$example";
-          done
+          v should-compile-all vee/examples
