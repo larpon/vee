@@ -18,11 +18,11 @@ pub enum Mode {
 	@select
 }
 
-type InputType = byte | rune | string
+type InputType = u8 | rune | string
 
 fn (ipt InputType) len() int {
 	match ipt {
-		byte, rune {
+		u8, rune {
 			return 1
 		}
 		string {
@@ -33,7 +33,7 @@ fn (ipt InputType) len() int {
 
 fn (ipt InputType) str() string {
 	match ipt {
-		byte {
+		u8 {
 			return ipt.ascii_str()
 		}
 		rune {
