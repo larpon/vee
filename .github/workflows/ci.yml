@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   v-compiles-vee-examples:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       VFLAGS: -cc tcc -no-retry-compilation
@@ -39,12 +39,13 @@ jobs:
         run: |
           cd vee
           v test-fmt
-
-      - name: Build vee shared
-        run: v -shared -g vee
+          v fmt -verify .
 
       - name: Run tests
         run: v test vee
+
+      - name: Build vee shared
+        run: v -shared -g vee
 
       - name: Build vee examples
         run: |
