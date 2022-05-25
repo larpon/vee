@@ -18,7 +18,7 @@ pub enum Mode {
 	@select
 }
 
-type InputType = u8 | rune | string
+type InputType = rune | string | u8
 
 fn (ipt InputType) len() int {
 	match ipt {
