@@ -38,6 +38,7 @@ pub struct BufferConfig {
 	tab_width  int    = 4
 }
 
+// new_buffer returns a new heap-allocated `Buffer` instance.
 pub fn new_buffer(config BufferConfig) &Buffer {
 	mut b := &Buffer{
 		line_break: config.line_break
@@ -49,33 +50,42 @@ pub fn new_buffer(config BufferConfig) &Buffer {
 	return b
 }
 
+// set_mode sets the edit mode to `mode`.
 pub fn (mut b Buffer) set_mode(mode Mode) {
 	b.mode = mode
 }
 
+// flatten returns `s` as a "flat" `string`.
+// Escape characters are visible.
 pub fn (b Buffer) flatten(s string) string {
 	return s.replace(b.line_break, r'\n').replace('\t', r'\t')
 }
 
+// flat returns the buffer as a "flat" `string`.
+// Escape characters are visible.
 pub fn (b Buffer) flat() string {
 	return b.flatten(b.raw())
 }
 
+// raw returns the contents of the buffer as-is.
 pub fn (b Buffer) raw() string {
 	return b.lines.join(b.line_break)
 }
 
+// eol returns `true` if the cursor is at the end of a line.
 pub fn (b Buffer) eol() bool {
 	x, y := b.cursor.xy()
 	line := b.line(y).runes()
 	return x >= line.len
 }
 
+// eof returns `true` if the cursor is at the end of the file/buffer.
 pub fn (b Buffer) eof() bool {
 	_, y := b.cursor.xy()
 	return y >= b.lines.len - 1
 }
 
+// cur_char returns the character at the cursor.
 pub fn (b Buffer) cur_char() string {
 	x, y := b.cursor.xy()
 	line := b.line(y).runes()
@@ -86,6 +96,7 @@ pub fn (b Buffer) cur_char() string {
 	return [line[x]].string()
 }
 
+// cur_rune returns the character at the cursor.
 pub fn (b Buffer) cur_rune() rune {
 	c := b.cur_char().runes()
 	if c.len > 0 {
@@ -94,6 +105,7 @@ pub fn (b Buffer) cur_rune() rune {
 	return rune(0)
 }
 
+// prev_rune returns the previous rune.
 pub fn (b Buffer) prev_rune() rune {
 	c := b.prev_char().runes()
 	if c.len > 0 {
@@ -102,6 +114,7 @@ pub fn (b Buffer) prev_rune() rune {
 	return rune(0)
 }
 
+// prev_char returns the previous character.
 pub fn (b Buffer) prev_char() string {
 	mut x, y := b.cursor.xy()
 	x--
@@ -113,6 +126,8 @@ pub fn (b Buffer) prev_char() string {
 	return [line[x]].string()
 }
 
+// cur_slice returns the contents from start of
+// the current line up until the cursor.
 pub fn (b Buffer) cur_slice() string {
 	x, y := b.cursor.xy()
 	line := b.line(y).runes()
@@ -122,6 +137,7 @@ pub fn (b Buffer) cur_slice() string {
 	return line[..x].string()
 }
 
+// line returns the contents of the line at `y`.
 pub fn (b Buffer) line(y int) string {
 	if y < 0 || y >= b.lines.len {
 		return ''
@@ -129,15 +145,18 @@ pub fn (b Buffer) line(y int) string {
 	return b.lines[y]
 }
 
+// line returns the contents of the line the cursor is at.
 pub fn (b Buffer) cur_line() string {
 	_, y := b.cursor.xy()
 	return b.line(y)
 }
 
+// cur_line_flat returns the "flat" contents of the line the cursor is at.
 pub fn (b Buffer) cur_line_flat() string {
 	return b.flatten(b.cur_line())
 }
 
+// cursor_index returns the linear index of the cursor.
 pub fn (b Buffer) cursor_index() int {
 	mut i := 0
 	for y, line in b.lines {
@@ -150,6 +169,7 @@ pub fn (b Buffer) cursor_index() int {
 	return i
 }
 
+// put adds `input` to the buffer.
 pub fn (mut b Buffer) put(ipt InputType) {
 	s := ipt.str()
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "${b.flatten(s)}"')
@@ -182,11 +202,15 @@ pub fn (mut b Buffer) put(ipt InputType) {
 	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
 }
 
+// put_line_break adds a line break to the buffer.
 pub fn (mut b Buffer) put_line_break() {
 	b.put(b.line_break)
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
 }
 
+// del deletes `amount` of characters from the buffer.
+// An `amount` > 0 will delete `amount` characters to the *right* of the cursor.
+// An `amount` < 0 will delete `amount` characters to the *left* of the cursor.
 pub fn (mut b Buffer) del(amount int) string {
 	if amount == 0 {
 		return ''
@@ -410,6 +434,7 @@ pub fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 	}
 }
 
+// move_to_word navigates the cursor to the nearst word in the given direction.
 pub fn (mut b Buffer) move_to_word(movement Movement) {
 	a := if movement == .left { -1 } else { 1 }
 
@@ -448,10 +473,12 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 /*
 * Selections
 */
+// set_default_select sets the default selection.
 pub fn (mut b Buffer) set_default_select(from Position, to Position) {
 	b.set_select(0, from, to)
 }
 
+// set_select sets the selection `index`.
 pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
 	if b.mode != .@select {
 		b.mode = .@select
@@ -469,6 +496,7 @@ pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
 	}
 }
 
+// selection_at sets the default selection at `index`.
 pub fn (b Buffer) selection_at(index int) Selection {
 	// TODO bounds check or map ??
 	return b.selections[index]

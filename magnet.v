@@ -9,6 +9,7 @@ mut:
 	x int
 }
 
+// str returns a string representation of the `Magnet`.
 pub fn (m Magnet) str() string {
 	mut s := @MOD + '.Magnet{
 	x: $m.x'
