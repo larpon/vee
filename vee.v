@@ -22,11 +22,13 @@ pub:
 pub struct VeeConfig {
 }
 
+// new returns a new heap-allocated `Vee` instance.
 pub fn new(config VeeConfig) &Vee {
 	ed := &Vee{}
 	return ed
 }
 
+// view returns a `View` of the buffer between `from` and `to`.
 pub fn (mut v Vee) view(from int, to int) View {
 	mut b := v.active_buffer()
 
@@ -69,6 +71,7 @@ pub fn (mut v Vee) view(from int, to int) View {
 	}
 }
 
+// free frees resources from this `Vee` instance.
 pub fn (mut v Vee) free() {
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
 	unsafe {
@@ -80,11 +83,13 @@ pub fn (mut v Vee) free() {
 	}
 }
 
+// new_buffer creates a new buffer and returns it's id for later reference.
 pub fn (mut v Vee) new_buffer() int {
 	b := new_buffer(BufferConfig{})
 	return v.add_buffer(b)
 }
 
+// buffer_at returns the `Buffer` instance with `id`.
 pub fn (mut v Vee) buffer_at(id int) &Buffer {
 	mut buf_idx := id
 	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' get buffer $id/${v.buffers.len}')
@@ -101,16 +106,19 @@ pub fn (mut v Vee) buffer_at(id int) &Buffer {
 	return v.buffers[buf_idx]
 }
 
+// active_buffer returns the currently active `Buffer` instance.
 pub fn (mut v Vee) active_buffer() &Buffer {
 	return v.buffer_at(v.active_buffer_id)
 }
 
+// dmp dumps all buffers to std_err.
 pub fn (v Vee) dmp() {
 	for buffer in v.buffers {
 		buffer.dmp()
 	}
 }
 
+// add_buffer adds the `Buffer` `b` and returns it's `id`.
 pub fn (mut v Vee) add_buffer(b &Buffer) int {
 	v.buffers << b
 	// TODO signal_buffer_added(b)
@@ -120,12 +128,13 @@ pub fn (mut v Vee) add_buffer(b &Buffer) int {
 /*
 * Cursor movement
 */
+// cursor_to move the cursor position to `pos`.
 pub fn (mut v Vee) cursor_to(pos Position) {
 	mut b := v.active_buffer()
 	b.cursor_to(pos.x, pos.y)
 }
 
-// move_cursor will navigate the cursor within the buffer bounds
+// move_cursor navigates the cursor within the buffer bounds
 pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -138,6 +147,7 @@ pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
 	v.invoker.add_and_execute(cmd)
 }
 
+// move_to_word navigates the cursor to the nearst word in the given direction.
 pub fn (mut v Vee) move_to_word(movement Movement) {
 	// v.active_buffer().move_to_word(movement)
 
@@ -154,6 +164,7 @@ pub fn (mut v Vee) move_to_word(movement Movement) {
 /*
 * Undo/redo -able buffer commands
 */
+// put adds `input` to the active `Buffer`.
 pub fn (mut v Vee) put(input InputType) {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -174,6 +185,7 @@ pub fn (mut v Vee) put(input InputType) {
 	v.invoker.execute()
 }
 
+// put_line_break adds a line break to the active `Buffer`.
 pub fn (mut v Vee) put_line_break() {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -184,6 +196,9 @@ pub fn (mut v Vee) put_line_break() {
 	v.invoker.add_and_execute(cmd)
 }
 
+// del deletes `amount` of characters from the active `Buffer`.
+// An `amount` > 0 will delete `amount` characters to the *right* of the cursor.
+// An `amount` < 0 will delete `amount` characters to the *left* of the cursor.
 pub fn (mut v Vee) del(amount int) {
 	// TODO CRITICAL it should be on the stack but there's a bug with interfaces preventing/corrupting the value of "vee"
 	// NOTE that these aren't freed
@@ -195,7 +210,7 @@ pub fn (mut v Vee) del(amount int) {
 	v.invoker.add_and_execute(cmd)
 }
 
-//
+// undo undo the last executed command.
 pub fn (mut v Vee) undo() bool {
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
 
@@ -246,6 +261,7 @@ pub fn (mut v Vee) undo() bool {
 	return true
 }
 
+// redo redo the last undone command.
 pub fn (mut v Vee) redo() bool {
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN)
 

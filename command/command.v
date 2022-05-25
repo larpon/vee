@@ -22,15 +22,18 @@ mut:
 	redo_stack    []ICommand
 }
 
+// add_and_execute adds and then executes `cmd`.
 pub fn (mut i Invoker) add_and_execute(cmd ICommand) {
 	i.add(cmd)
 	i.execute()
 }
 
+// add adds `cmd` to the `Invoker`.
 pub fn (mut i Invoker) add(cmd ICommand) {
 	i.command_queue << cmd
 }
 
+// peek peeks the next command.
 pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 	dbg(@MOD + '.' + @STRUCT + '::' + @FN + '(' + queue_type.str() + ')')
 
@@ -55,6 +58,7 @@ pub fn (mut i Invoker) peek(queue_type QueueType) ?ICommand {
 	return none
 }
 
+// execute executes the next command.
 pub fn (mut i Invoker) execute() bool {
 	if i.command_queue.len > 0 {
 		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
@@ -68,6 +72,7 @@ pub fn (mut i Invoker) execute() bool {
 	return false
 }
 
+// undo undo the last executed command.
 pub fn (mut i Invoker) undo() ?ICommand {
 	if i.undo_stack.len > 0 {
 		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
@@ -80,6 +85,7 @@ pub fn (mut i Invoker) undo() ?ICommand {
 	return none
 }
 
+// redo redo the last undone command.
 pub fn (mut i Invoker) redo() ?ICommand {
 	if i.redo_stack.len > 0 {
 		dbg(@MOD + '.' + @STRUCT + '::' + @FN)
