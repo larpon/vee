@@ -14,3 +14,4 @@ Progammed to make it easier, faster and richer to develop editors, text areas, c
 * Full undo/redo support
 * Cursor magnet
 * Movement by words
+* Unicode support
