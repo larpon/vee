@@ -1,0 +1,40 @@
+name: Docs CI
+
+### Run on *EVERY* commit. The documentation *SHOULD* stay valid, and
+### the developers should receive early warning if they break it.
+on: [push, pull_request]
+
+jobs:
+  check-markdown:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Install V
+        uses: vlang/setup-v@v1
+        with:
+          check-latest: true
+
+      - name: Checkout project
+        uses: actions/checkout@v2
+
+      - name: Check markdown line length & code examples
+        run: v check-md -hide-warnings .
+        ## NB: -hide-warnings is used here, so that the output is less noisy,
+        ## thus real errors are easier to spot.
+
+  report-missing-fn-doc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MOPTIONS: --verify --relative-paths
+    steps:
+      - name: Install V
+        uses: vlang/setup-v@v1
+        with:
+          check-latest: true
+
+      - name: Checkout project
+        uses: actions/checkout@v2
+
+      - name: Check for missing documentation
+        run: v missdoc $MOPTIONS .
