@@ -15,7 +15,7 @@ mut:
 	redo()
 }
 
-struct Invoker {
+pub struct Invoker {
 mut:
 	command_queue []ICommand
 	undo_stack    []ICommand

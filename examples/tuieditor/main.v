@@ -119,8 +119,8 @@ const (
 
 struct App {
 mut:
-	tui            &ui.Context = 0
-	ed             &vee.Vee    = 0
+	tui            &ui.Context = unsafe { nil }
+	ed             &vee.Vee    = unsafe { nil }
 	file           string
 	status         string
 	status_timeout int

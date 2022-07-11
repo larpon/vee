@@ -6,14 +6,14 @@ import strings
 import vee.command
 
 [heap]
-struct Vee {
+pub struct Vee {
 mut:
 	buffers          []&Buffer
 	active_buffer_id int
 	invoker          command.Invoker
 }
 
-struct View {
+pub struct View {
 pub:
 	raw    string
 	cursor Cursor
