@@ -4,7 +4,7 @@ module vee
 
 struct Magnet {
 mut:
-	buffer &Buffer
+	buffer &Buffer = unsafe { nil }
 	//	record bool = true
 	x int
 }
