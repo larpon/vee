@@ -99,7 +99,7 @@ pub fn (mut v Vee) buffer_at(id int) &Buffer {
 		dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' added initial buffer')
 	}
 	if buf_idx < 0 || buf_idx >= v.buffers.len {
-		dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' invalid index "$buf_idx". Returning active')
+		dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' invalid index "${buf_idx}". Returning active')
 		// TODO also check that the active index can be reached
 		buf_idx = v.active_buffer_id
 	}

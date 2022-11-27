@@ -173,7 +173,7 @@ fn (mut a App) footer() {
 
 	mut status := a.status
 	a.tui.draw_text(0, h - 1, '─'.repeat(w))
-	footer := '$finfo Line ${b.cursor.pos.y + 1:4}/${b.lines.len:-4}, Column ${b.cursor.pos.x + 1:3}/${b.cur_line().len:-3} index: ${b.cursor_index():5} (ESC = quit, Ctrl+s = save)'
+	footer := '${finfo} Line ${b.cursor.pos.y + 1:4}/${b.lines.len:-4}, Column ${b.cursor.pos.x + 1:3}/${b.cur_line().len:-3} index: ${b.cursor_index():5} (ESC = quit, Ctrl+s = save)'
 	if footer.len < w {
 		a.tui.draw_text((w - footer.len) / 2, h, footer)
 	} else if footer.len == w {
@@ -194,7 +194,7 @@ fn (mut a App) footer() {
 			g: 0
 			b: 0
 		)
-		a.tui.draw_text((w + 4 - status.len) / 2, h - 1, ' $status ')
+		a.tui.draw_text((w + 4 - status.len) / 2, h - 1, ' ${status} ')
 		a.tui.reset()
 
 		if a.status_timeout <= 0 {
@@ -223,19 +223,19 @@ fn (mut a App) dbg_overlay() {
 	// buffer_flat := b.flat()
 	// buffer_snippet := if flat.len > w050-30 { flat[..w050-30] } else { flat }
 
-	text := 'PID $os.getpid()
-Char bytes    "$b.cur_char().bytes()"
+	text := 'PID ${os.getpid()}
+Char bytes    "${b.cur_char().bytes()}"
 PrevChar "${literal(b.prev_char())}/${east_asian.display_width(b.prev_char(),
 		1)}"
 Char     "${literal(b.cur_char())}/${east_asian.display_width(b.cur_char(),
 		1)}"
-Slice    "${literal(b.cur_slice())} $b.cur_slice().len/$b.cur_slice().runes().len/${east_asian.display_width(b.cur_slice(),
+Slice    "${literal(b.cur_slice())} ${b.cur_slice().len}/${b.cur_slice().runes().len}/${east_asian.display_width(b.cur_slice(),
 		1)}"
-Line     "$line_snippet  $line_snippet.len/$line_snippet.runes().len/${east_asian.display_width(line_snippet,
+Line     "${line_snippet}  ${line_snippet.len}/${line_snippet.runes().len}/${east_asian.display_width(line_snippet,
 		1)}"
-EOL      $b.eol()
-EOF      $b.eof()
-Buffer lines $b.lines.len
+EOL      ${b.eol()}
+EOF      ${b.eof()}
+Buffer lines ${b.lines.len}
 ${flatten(b.cursor.str())}
 ${flatten(b.magnet.str())}
 '

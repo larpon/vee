@@ -205,7 +205,7 @@ pub fn (mut b Buffer) put(ipt InputType) {
 // put_line_break adds a line break to the buffer.
 pub fn (mut b Buffer) put_line_break() {
 	b.put(b.line_break)
-	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"')
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "${b.flat()}"')
 }
 
 // del deletes `amount` of characters from the buffer.
@@ -323,13 +323,13 @@ pub fn (mut b Buffer) del(amount int) string {
 	b.magnet.record()
 	// dbg(@MOD+'.'+@STRUCT+'::'+@FN+' "${b.flat()}"')
 
-	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "$b.flat()"-"${b.flatten(removed)}"')
+	dbg(@MOD + '.' + @STRUCT + '::' + @FN + ' "${b.flat()}"-"${b.flatten(removed)}"')
 
 	return removed
 }
 
 fn (b Buffer) dmp() {
-	eprintln('$b.cursor.pos\n$b.raw()')
+	eprintln('${b.cursor.pos}\n${b.raw()}')
 }
 
 // free frees all buffer memory

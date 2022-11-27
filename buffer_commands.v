@@ -14,7 +14,7 @@ mut:
 fn (cmd PutCmd) str() string {
 	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
-	input: $cmd.input
+	input: ${cmd.input}
 }'
 }
 
@@ -79,9 +79,9 @@ fn (cmd DelCmd) str() string {
 	return @STRUCT +
 		' {
 	buffer: ${ptr_str(cmd.buffer)}
-	amount: $cmd.amount
-	deleted: $cmd.deleted
-	pos: $cmd.pos
+	amount: ${cmd.amount}
+	deleted: ${cmd.deleted}
+	pos: ${cmd.pos}
 }'
 }
 
@@ -131,7 +131,7 @@ mut:
 fn (cmd MoveCursorCmd) str() string {
 	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
-	movement: $cmd.movement
+	movement: ${cmd.movement}
 }'
 }
 
@@ -172,7 +172,7 @@ mut:
 fn (cmd MoveToWordCmd) str() string {
 	return @STRUCT + ' {
 	buffer: ${ptr_str(cmd.buffer)}
-	movement: $cmd.movement
+	movement: ${cmd.movement}
 }'
 }
 
