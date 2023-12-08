@@ -8,7 +8,7 @@ pub enum QueueType {
 	redo
 }
 
-interface ICommand {
+pub interface ICommand {
 mut:
 	do()
 	undo()
@@ -98,7 +98,7 @@ pub fn (mut i Invoker) redo() ?ICommand {
 	return none
 }
 
-[if vee_debug ?]
+@[if vee_debug ?]
 fn dbg(str string) {
 	eprintln(str)
 }
