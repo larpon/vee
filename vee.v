@@ -5,7 +5,7 @@ module vee
 import strings
 import vee.command
 
-[heap]
+@[heap]
 pub struct Vee {
 mut:
 	buffers          []&Buffer

@@ -19,7 +19,7 @@ mut:
 	to   Position
 }
 
-[heap]
+@[heap]
 struct Buffer {
 	line_break string = '\n'
 pub:

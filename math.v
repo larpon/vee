@@ -2,12 +2,12 @@
 // Use of this source code is governed by the MIT license distributed with this software.
 module vee
 
-[inline]
+@[inline]
 fn imax(x int, y int) int {
 	return if x < y { y } else { x }
 }
 
-[inline]
+@[inline]
 fn imin(x int, y int) int {
 	return if x < y { x } else { y }
 }
