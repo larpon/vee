@@ -4,7 +4,6 @@ import os
 import term
 import term.ui
 import vee
-import encoding.utf8
 import encoding.utf8.east_asian
 
 const space_unicode = [
