@@ -451,12 +451,12 @@ pub fn (mut b Buffer) move_to_word(movement Movement) {
 	}
 	// first, move past all non-`a-zA-Z0-9_` characters
 	for x + a >= 0 && x + a < line.len && !(utf8.is_letter(line[x + a])
-		|| line[x + a] in vee.rune_digits || line[x + a] == `_`) {
+		|| line[x + a] in rune_digits || line[x + a] == `_`) {
 		x += a
 	}
 	// then, move past all the letters and numbers
 	for x + a >= 0 && x + a < line.len && (utf8.is_letter(line[x + a])
-		|| line[x + a] in vee.rune_digits || line[x + a] == `_`) {
+		|| line[x + a] in rune_digits || line[x + a] == `_`) {
 		x += a
 	}
 	// if the cursor is out of bounds, move it to the next/previous line
@@ -485,8 +485,8 @@ pub fn (mut b Buffer) set_select(index int, from Position, to Position) {
 	}
 	if b.selections.len == 0 {
 		b.selections << Selection{
-			from: from
-			to: to
+			from:   from
+			to:     to
 			buffer: b
 		}
 	} else {

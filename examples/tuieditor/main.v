@@ -420,14 +420,14 @@ fn main() {
 		file: file
 	}
 	a.tui = ui.init(
-		user_data: a
-		init_fn: init
-		frame_fn: frame
-		cleanup_fn: cleanup
-		event_fn: event
-		fail_fn: fail
+		user_data:      a
+		init_fn:        init
+		frame_fn:       frame
+		cleanup_fn:     cleanup
+		event_fn:       event
+		fail_fn:        fail
 		capture_events: true
-		frame_rate: 60
+		frame_rate:     60
 	)
 	a.tui.run() or { panic(err) }
 }

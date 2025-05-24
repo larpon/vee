@@ -61,7 +61,7 @@ pub fn (mut v Vee) view(from int, to int) View {
 	}
 	raw := lines.join(b.line_break)
 	return View{
-		raw: raw.replace('\t', strings.repeat(` `, b.tab_width))
+		raw:    raw.replace('\t', strings.repeat(` `, b.tab_width))
 		cursor: Cursor{
 			pos: Position{
 				x: x
@@ -140,8 +140,8 @@ pub fn (mut v Vee) move_cursor(amount int, movement Movement) {
 	// NOTE that these aren't freed
 	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
 	mut cmd := &MoveCursorCmd{
-		buffer: v.active_buffer()
-		amount: amount
+		buffer:   v.active_buffer()
+		amount:   amount
 		movement: movement
 	}
 	v.invoker.add_and_execute(cmd)
@@ -155,7 +155,7 @@ pub fn (mut v Vee) move_to_word(movement Movement) {
 	// NOTE that these aren't freed
 	// See: https://discord.com/channels/592103645835821068/592294828432424960/842463741308436530
 	mut cmd := &MoveToWordCmd{
-		buffer: v.active_buffer()
+		buffer:   v.active_buffer()
 		movement: movement
 	}
 	v.invoker.add_and_execute(cmd)
@@ -178,7 +178,7 @@ pub fn (mut v Vee) put(input InputType) {
 	} else {
 		mut cmd := &PutCmd{
 			buffer: b
-			input: input
+			input:  input
 		}
 		v.invoker.add(cmd)
 	}
